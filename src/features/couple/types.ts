@@ -1,0 +1,51 @@
+export interface CouplePartner {
+  id: 'partner-a' | 'partner-b'
+  name: string
+  initial: string
+  photo?: string
+}
+
+export interface CoupleProfile {
+  partners: [CouplePartner, CouplePartner]
+  relationshipStartDate: string
+  description: string
+}
+
+export type DreamCategory =
+  'travel' | 'experiences' | 'food' | 'personal_goals' | 'other'
+
+export interface Dream {
+  id: string
+  title: string
+  description: string
+  category: DreamCategory
+  targetDate?: string
+  completed: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type ImportantDateType =
+  | 'first_meeting'
+  | 'first_date'
+  | 'relationship_anniversary'
+  | 'birthday'
+  | 'custom'
+
+export interface ImportantDate {
+  id: string
+  title: string
+  date: string
+  type: ImportantDateType
+  recurringAnnually: boolean
+  isCustom: boolean
+}
+
+export type DreamDraft = Pick<
+  Dream,
+  'title' | 'description' | 'category' | 'targetDate'
+>
+export type SpecialDateDraft = Pick<
+  ImportantDate,
+  'title' | 'date' | 'recurringAnnually'
+>

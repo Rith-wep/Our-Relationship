@@ -17,7 +17,7 @@ const actions: QuickAction[] = [
   },
   {
     label: 'Write Letter',
-    helper: 'Coming later',
+    helper: 'Write privately',
     path: '/letters',
     icon: Heart,
   },

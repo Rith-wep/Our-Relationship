@@ -17,7 +17,7 @@ interface MemoryDialogProps {
   description?: string
   children: ReactNode
   onClose: () => void
-  size?: 'sheet' | 'compact' | 'viewer' | 'detail'
+  size?: 'sheet' | 'compact' | 'viewer' | 'detail' | 'letter'
 }
 
 const sizeStyles = {
@@ -28,6 +28,8 @@ const sizeStyles = {
     'm-auto h-full w-full bg-black sm:h-auto sm:max-h-[92dvh] sm:max-w-3xl sm:rounded-card',
   detail:
     'm-0 h-full w-full max-w-app sm:m-auto sm:h-[min(92dvh,50rem)] sm:rounded-card',
+  letter:
+    'm-0 h-full w-full max-w-app bg-[#fffbf5] sm:m-auto sm:h-[min(92dvh,50rem)] sm:rounded-card',
 } as const
 
 const focusableSelector = [
@@ -148,7 +150,7 @@ export function MemoryDialog({
               ease: 'easeOut',
             }}
           >
-            {size === 'viewer' ? (
+            {size === 'viewer' || size === 'letter' ? (
               <div className="sr-only">
                 <h2 id={titleId}>{title}</h2>
                 {description ? <p id={descriptionId}>{description}</p> : null}

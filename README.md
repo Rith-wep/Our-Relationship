@@ -6,13 +6,13 @@
 
 **Frontend foundation implemented; product features remain planned.**
 
-The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, and Memories frontends, two placeholder routes, shared in-memory state, reusable design-system components, strict static analysis, and formatting tools. Supabase integration, authentication, database schema, PWA behavior, deployment, and the remaining feature screens are **planned functionality**, not completed features.
+The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space frontends, shared in-memory state, reusable design-system components, strict static analysis, and formatting tools. Supabase integration, authentication, database schema, PWA behavior, and deployment are **planned functionality**, not completed features.
 
 ### Implemented now
 
 - React 19 application built with Vite 8 and strict TypeScript 6
 - Tailwind CSS 4 using its recommended Vite plugin
-- React Router with lazy-loaded Home, Timeline, and Memories routes plus placeholders for Love Letters and Couple Profile
+- React Router with lazy-loaded Home, Timeline, Memories, Love Letters, and Our Space routes
 - Mobile-first tokens, safe-area spacing, accessible focus styles, and reduced-motion defaults
 - Responsive `AppShell` with a centered 430 px desktop presentation and persistent bottom navigation
 - Accessible five-item navigation using Lucide icons and route-aware active states
@@ -22,13 +22,17 @@ The repository contains a working React, Vite, and TypeScript application with T
 - Premium Home frontend with a couple hero, live relationship duration, anniversary countdown, daily notes, recent memories, and quick actions
 - Shared `MemoriesProvider` synchronizing Home, Timeline, and Memories during the current session
 - Interactive Memories Gallery with filters, details, favorites, soft deletion, restoration, and permanent removal
+- Interactive Love Letters with simulated partner identities, mailbox tabs, drafts, reading, favorites, and soft deletion
+- Shared `LettersProvider` with typed session-only correspondence state
+- Shared `CoupleProvider` synchronizing the couple profile between Home and Our Space
+- Interactive dreams, important dates, and honest planned settings in Our Space
 - `@/` source import alias
 - ESLint, Prettier, type-check, and production-build scripts
 - Documented Supabase environment placeholders; Supabase itself is not connected
 
 ### Not implemented yet
 
-- Love Letters and Couple Profile feature interfaces
+- Supabase-backed account, authorization, and persistence features
 - Supabase, authentication, couple pairing, database, Storage, or Realtime
 - Media uploads, letters, memories, timeline behavior, and shared content
 - PWA manifest, service worker, offline behavior, and deployment configuration
@@ -146,8 +150,14 @@ src/
 ├── app/
 │   ├── App.tsx
 │   ├── providers/
+│   │   ├── couple-context.ts
+│   │   ├── CoupleProvider.tsx
+│   │   ├── letters-context.ts
+│   │   ├── LettersProvider.tsx
 │   │   ├── memories-context.ts
 │   │   ├── MemoriesProvider.tsx
+│   │   ├── useLetters.ts
+│   │   ├── useCouple.ts
 │   │   └── useMemories.ts
 │   └── router/
 │       ├── index.tsx
@@ -164,7 +174,19 @@ src/
 │       ├── IconButton.tsx
 │       └── PagePlaceholder.tsx
 ├── features/
-│   ├── couple/CouplePage.tsx
+│   ├── couple/
+│   │   ├── components/
+│   │   │   ├── CoupleProfile.tsx
+│   │   │   ├── CoupleSettings.tsx
+│   │   │   ├── DreamForm.tsx
+│   │   │   ├── DreamsList.tsx
+│   │   │   ├── EditCoupleProfile.tsx
+│   │   │   ├── ImportantDates.tsx
+│   │   │   └── SpecialDateForm.tsx
+│   │   ├── data/
+│   │   ├── CouplePage.tsx
+│   │   ├── date-utils.ts
+│   │   └── types.ts
 │   ├── home/
 │   │   ├── components/
 │   │   │   ├── AnniversaryCard.tsx
@@ -178,7 +200,18 @@ src/
 │   │   │   └── loveNotes.ts
 │   │   ├── hooks/useRelationshipDuration.ts
 │   │   └── HomePage.tsx
-│   ├── letters/LettersPage.tsx
+│   ├── letters/
+│   │   ├── components/
+│   │   │   ├── ComposeLetterDialog.tsx
+│   │   │   ├── DeletedLetters.tsx
+│   │   │   ├── LetterCard.tsx
+│   │   │   ├── LetterReader.tsx
+│   │   │   ├── LetterTabs.tsx
+│   │   │   └── PartnerSwitcher.tsx
+│   │   ├── data/demoLetters.ts
+│   │   ├── LettersPage.tsx
+│   │   ├── types.ts
+│   │   └── view-types.ts
 │   ├── memories/
 │   │   ├── components/
 │   │   │   ├── GalleryCard.tsx
@@ -255,10 +288,10 @@ Feature directories may contain their own `components`, `hooks`, `api`, `schemas
 | `/`         | Interactive Home frontend     |
 | `/timeline` | Interactive Timeline frontend |
 | `/memories` | Interactive Memories Gallery  |
-| `/letters`  | Love Letters placeholder      |
-| `/us`       | Couple Profile placeholder    |
+| `/letters`  | Interactive Love Letters      |
+| `/us`       | Interactive Our Space         |
 
-Love Letters and Couple Profile intentionally contain only a page header and empty-state copy. Home, Timeline, and Memories share one interactive session-state provider. Authentication guards and the expanded route plan below will be added in their corresponding phases.
+All five primary routes now provide interactive frontend experiences backed by session-state providers. Authentication guards and persisted data will be added in their corresponding phases.
 
 ## Implemented design system
 
@@ -268,6 +301,19 @@ Love Letters and Couple Profile intentionally contain only a page header and emp
 - **Primitives:** Typed buttons, icon buttons, cards, page headers, and empty states with shared sizing, color, radius, shadow, focus, and disabled-state conventions.
 - **Motion:** Short page fades/translations and press feedback only; system reduced-motion preferences disable nonessential movement.
 - **Tokens:** Coral-pink accent, neutral surfaces and text, 12–16 px corner radii, subtle elevation, system typography, and consistent content widths.
+
+## Shared couple state and Our Space
+
+`CoupleProvider` is mounted above routing and owns the single couple profile consumed by Home and `/us`. Updating partner names, profile images, relationship description, or relationship start date updates Home immediately, including its live duration and anniversary countdown. Profile images are validated and read as in-memory data URLs, avoiding unmanaged object URLs.
+
+The implemented Our Space frontend includes:
+
+- A polished profile with two editable partners, local photo previews, relationship date, description, and live total days together
+- A shared future-dream list with typed categories, add/edit/delete actions, planned/completed filtering, completion toggles, and a restrained progress bar
+- Important relationship dates with annual recurrence, upcoming-day calculations, custom add/edit/delete flows, and safe leap-year/month-end clamping
+- A minimal settings area that links back to profile editing and honestly labels authentication, notifications, accounts, and cloud privacy as planned
+
+Couple profile, dreams, images, and dates use React state only and reset to fictional demo data on refresh. The future Supabase implementation will map this provider to couple-scoped tables, private Storage objects, authenticated memberships, RLS policies, and realtime synchronization.
 
 ## Shared frontend memory architecture
 
@@ -282,6 +328,41 @@ Love Letters and Couple Profile intentionally contain only a page header and emp
 - Route-level lazy loading keeps feature screens in separate production chunks.
 
 The provider API is the temporary frontend boundary that will later be replaced or backed by typed Supabase queries, RLS-protected mutations, Storage uploads, and realtime cache synchronization.
+
+## Shared frontend letter architecture
+
+`LettersProvider` is mounted above the router and owns a typed, session-only collection of correspondence. The `useLetters` hook exposes draft creation and editing, draft ownership-aware deletion, sending, recipient-only read transitions, favorites, soft deletion, and restoration.
+
+- Letter records include database-oriented IDs, couple/sender/recipient relationships, draft/sent status, audit timestamps, read state, favorite state, and nullable deletion metadata.
+- Provider mutations require the acting demo partner where ownership or participation matters. These checks model intended behavior but are not an authentication or security boundary.
+- Sending is restricted to the current draft owner and requires non-empty title and body values. Already-sent letters cannot be sent again.
+- Opening a received sent letter marks it read; viewing the same letter from its sender's Sent box does not.
+- Soft-deleted letters are hidden from Inbox, Sent, and Drafts and can be restored from Recently Deleted.
+- State is intentionally not stored in local storage or a backend and resets to fictional demo letters on refresh.
+
+The eventual Supabase implementation will map these records to PostgreSQL, replace the identity simulator with authenticated membership, enforce sender/recipient access with RLS, and synchronize mutations through the shared data layer.
+
+## Implemented Love Letters frontend
+
+The `/letters` route provides a private correspondence experience with:
+
+- Inbox, Sent, and Drafts views that update for the selected fictional Partner A or Partner B identity
+- Clear sender, recipient, date, preview, unread, and optional favorite treatments
+- A development-only identity switcher explicitly labeled as simulation rather than authentication
+- A mobile writing dialog with an automatic recipient, accessible labels, title/body validation, draft saving, send protection, character count, and discard confirmation
+- Draft editing limited to the simulated sender who owns the draft
+- A focused ivory reading view with comfortable serif typography, paragraph spacing, signature, favorite, delete, back, and draft-only edit actions
+- Recipient-only read-state updates and synchronized views when switching demo identities
+- Friendly Inbox, Sent, Drafts, and Recently Deleted empty states
+- Soft deletion and restoration for both sent letters and drafts
+
+### Love Letters limitations before Supabase
+
+- Partner switching is a removable developer simulation and provides no identity verification or security.
+- Letters, drafts, favorites, read timestamps, and deletions exist only in React state and reset on refresh.
+- There is no delivery service, notification, scheduling, encryption layer, or cross-device synchronization.
+- Deletion affects the single shared frontend record for both simulated partners; production behavior requires an explicit retention and per-user visibility policy.
+- Browser-native confirmation is used when discarding unsaved compose changes.
 
 ## Implemented Memories frontend
 
@@ -315,14 +396,14 @@ The `/` route now provides a responsive, mobile-first Home experience with:
 - Monthly and yearly anniversary countdowns that clamp dates correctly at month end, including start dates on the 29th, 30th, or 31st
 - An original local collection of love notes selected deterministically by the device's local calendar date, plus a manual next-note action
 - The latest three records from the shared typed Timeline demo module, with navigation to the Timeline route
-- Compact navigation actions for adding a memory, viewing Timeline, and visiting the clearly unfinished Letters screen
+- Compact navigation actions for adding a memory, viewing Timeline, and writing a private letter
 
 ### Home limitations before Supabase
 
 - Couple names, initials, caption, relationship date, notes, and memories are fictional local demo data.
 - Home reads the shared provider, so Timeline and Gallery changes appear immediately during the same browser session.
 - The Add Memory action opens Timeline, where the existing floating action button starts the form; it does not open a global form from Home.
-- The Write Letter action opens the current placeholder Letters route and is labeled as coming later.
+- The Write Letter action opens the implemented session-only Love Letters experience.
 - Relationship settings, identity, persistence, and cross-device synchronization require the planned Supabase integration.
 
 ## Implemented Timeline frontend

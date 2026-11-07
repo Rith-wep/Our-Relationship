@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import { useCouple } from '@/app/providers/useCouple'
 import { useMemories } from '@/app/providers/useMemories'
 import { AnniversaryCard } from '@/features/home/components/AnniversaryCard'
 import { CoupleHero } from '@/features/home/components/CoupleHero'
@@ -7,7 +8,6 @@ import { DailyLoveNote } from '@/features/home/components/DailyLoveNote'
 import { QuickActions } from '@/features/home/components/QuickActions'
 import { RecentMemories } from '@/features/home/components/RecentMemories'
 import { RelationshipCounter } from '@/features/home/components/RelationshipCounter'
-import { demoCouple } from '@/features/home/data/demoCouple'
 
 function getGreeting(hour: number) {
   if (hour < 12) return 'Good morning'
@@ -18,6 +18,7 @@ function getGreeting(hour: number) {
 export function HomePage() {
   const greeting = useMemo(() => getGreeting(new Date().getHours()), [])
   const { activeMemories } = useMemories()
+  const { profile } = useCouple()
 
   return (
     <div className="space-y-8 py-2 pb-5">
@@ -35,9 +36,9 @@ export function HomePage() {
         </div>
         <div
           className="flex shrink-0 -space-x-2 pt-1"
-          aria-label={`${demoCouple.partners[0].name} and ${demoCouple.partners[1].name}`}
+          aria-label={`${profile.partners[0].name} and ${profile.partners[1].name}`}
         >
-          {demoCouple.partners.map((partner, index) => (
+          {profile.partners.map((partner, index) => (
             <span
               key={partner.name}
               aria-hidden="true"
@@ -48,19 +49,25 @@ export function HomePage() {
                   : 'bg-orange-100 text-orange-800',
               ].join(' ')}
             >
-              {partner.initial}
+              {partner.photo ? (
+                <img
+                  src={partner.photo}
+                  alt=""
+                  className="size-full rounded-full object-cover"
+                />
+              ) : (
+                partner.initial
+              )}
             </span>
           ))}
         </div>
       </header>
 
-      <CoupleHero couple={demoCouple} />
+      <CoupleHero couple={profile} />
       <RelationshipCounter
-        relationshipStartDate={demoCouple.relationshipStartDate}
+        relationshipStartDate={profile.relationshipStartDate}
       />
-      <AnniversaryCard
-        relationshipStartDate={demoCouple.relationshipStartDate}
-      />
+      <AnniversaryCard relationshipStartDate={profile.relationshipStartDate} />
       <DailyLoveNote />
       <RecentMemories memories={activeMemories} />
       <QuickActions />

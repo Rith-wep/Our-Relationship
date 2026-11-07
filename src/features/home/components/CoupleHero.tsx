@@ -1,10 +1,10 @@
 import { CalendarDays } from 'lucide-react'
 
 import { Card } from '@/components/ui/Card'
-import type { DemoCouple } from '@/features/home/data/demoCouple'
+import type { CoupleProfile } from '@/features/couple/types'
 
 interface CoupleHeroProps {
-  couple: DemoCouple
+  couple: CoupleProfile
 }
 
 const startDateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -37,7 +37,15 @@ export function CoupleHero({ couple }: CoupleHeroProps) {
                   : 'bg-orange-100 text-orange-800',
               ].join(' ')}
             >
-              {partner.initial}
+              {partner.photo ? (
+                <img
+                  src={partner.photo}
+                  alt=""
+                  className="size-full rounded-full object-cover"
+                />
+              ) : (
+                partner.initial
+              )}
             </div>
           ))}
         </div>
@@ -50,7 +58,7 @@ export function CoupleHero({ couple }: CoupleHeroProps) {
           <span>Together since {formattedStartDate}</span>
         </div>
         <p className="mt-4 max-w-[19rem] text-sm leading-6 text-text-secondary">
-          {couple.caption}
+          {couple.description}
         </p>
       </div>
     </Card>
