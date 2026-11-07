@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { Heart, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { Card } from '@/components/ui/Card'
@@ -60,6 +60,17 @@ export function MemoryCard({
             {memory.title}
           </h2>
           <div className="-mt-2 -mr-2 flex shrink-0">
+            {memory.isFavorite ? (
+              <span
+                className="flex size-11 items-center justify-center text-primary"
+                aria-label="Favorite memory"
+              >
+                <Heart
+                  aria-hidden="true"
+                  className="size-[18px] fill-current"
+                />
+              </span>
+            ) : null}
             <IconButton
               label={`Edit ${memory.title}`}
               onClick={() => onEdit(memory)}

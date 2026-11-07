@@ -17,7 +17,7 @@ interface MemoryDialogProps {
   description?: string
   children: ReactNode
   onClose: () => void
-  size?: 'sheet' | 'compact' | 'viewer'
+  size?: 'sheet' | 'compact' | 'viewer' | 'detail'
 }
 
 const sizeStyles = {
@@ -26,6 +26,8 @@ const sizeStyles = {
   compact: 'm-auto w-[calc(100%-2rem)] max-w-sm rounded-card',
   viewer:
     'm-auto h-full w-full bg-black sm:h-auto sm:max-h-[92dvh] sm:max-w-3xl sm:rounded-card',
+  detail:
+    'm-0 h-full w-full max-w-app sm:m-auto sm:h-[min(92dvh,50rem)] sm:rounded-card',
 } as const
 
 const focusableSelector = [

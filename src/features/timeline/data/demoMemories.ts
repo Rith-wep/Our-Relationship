@@ -18,6 +18,7 @@ export const demoMemories: TimelineMemory[] = [
     createdBy: 'Demo partner',
     createdAt: '2023-03-19T09:30:00.000Z',
     updatedAt: '2023-03-19T09:30:00.000Z',
+    isFavorite: true,
   },
   {
     id: 'demo-first-date',
@@ -33,6 +34,7 @@ export const demoMemories: TimelineMemory[] = [
     createdBy: 'Demo partner',
     createdAt: '2023-04-03T08:15:00.000Z',
     updatedAt: '2023-04-03T08:15:00.000Z',
+    isFavorite: false,
   },
   {
     id: 'demo-relationship-started',
@@ -44,6 +46,7 @@ export const demoMemories: TimelineMemory[] = [
     createdBy: 'Demo partner',
     createdAt: '2023-05-12T18:45:00.000Z',
     updatedAt: '2023-05-12T18:45:00.000Z',
+    isFavorite: true,
   },
   {
     id: 'demo-special-trip',
@@ -59,5 +62,6 @@ export const demoMemories: TimelineMemory[] = [
     createdBy: 'Demo partner',
     createdAt: '2023-08-27T10:00:00.000Z',
     updatedAt: '2023-08-27T10:00:00.000Z',
+    isFavorite: false,
   },
 ]

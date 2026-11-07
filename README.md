@@ -6,26 +6,29 @@
 
 **Frontend foundation implemented; product features remain planned.**
 
-The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, five placeholder routes, reusable design-system components, strict static analysis, and formatting tools. Actual feature screens, Supabase integration, authentication, database schema, PWA behavior, and deployment are **planned functionality**, not completed features.
+The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, and Memories frontends, two placeholder routes, shared in-memory state, reusable design-system components, strict static analysis, and formatting tools. Supabase integration, authentication, database schema, PWA behavior, deployment, and the remaining feature screens are **planned functionality**, not completed features.
 
 ### Implemented now
 
 - React 19 application built with Vite 8 and strict TypeScript 6
 - Tailwind CSS 4 using its recommended Vite plugin
-- React Router with placeholders for Home, Timeline, Memories, Love Letters, and Couple Profile
+- React Router with lazy-loaded Home, Timeline, and Memories routes plus placeholders for Love Letters and Couple Profile
 - Mobile-first tokens, safe-area spacing, accessible focus styles, and reduced-motion defaults
 - Responsive `AppShell` with a centered 430 px desktop presentation and persistent bottom navigation
 - Accessible five-item navigation using Lucide icons and route-aware active states
 - Reusable `PageHeader`, `Button`, `IconButton`, `Card`, and `EmptyState` components
 - Restrained Motion page transitions and button press feedback with reduced-motion support
 - Interactive Relationship Timeline with typed memories, local demo data, add/edit/delete flows, photo preview, and accessible dialogs
+- Premium Home frontend with a couple hero, live relationship duration, anniversary countdown, daily notes, recent memories, and quick actions
+- Shared `MemoriesProvider` synchronizing Home, Timeline, and Memories during the current session
+- Interactive Memories Gallery with filters, details, favorites, soft deletion, restoration, and permanent removal
 - `@/` source import alias
 - ESLint, Prettier, type-check, and production-build scripts
 - Documented Supabase environment placeholders; Supabase itself is not connected
 
 ### Not implemented yet
 
-- Home, Memories, Love Letters, and Couple Profile feature interfaces
+- Love Letters and Couple Profile feature interfaces
 - Supabase, authentication, couple pairing, database, Storage, or Realtime
 - Media uploads, letters, memories, timeline behavior, and shared content
 - PWA manifest, service worker, offline behavior, and deployment configuration
@@ -142,7 +145,13 @@ The current implementation intentionally creates only folders that contain worki
 src/
 ├── app/
 │   ├── App.tsx
-│   └── router/index.tsx
+│   ├── providers/
+│   │   ├── memories-context.ts
+│   │   ├── MemoriesProvider.tsx
+│   │   └── useMemories.ts
+│   └── router/
+│       ├── index.tsx
+│       └── RoutePages.tsx
 ├── components/
 │   ├── layout/
 │   │   ├── AppShell.tsx
@@ -156,9 +165,28 @@ src/
 │       └── PagePlaceholder.tsx
 ├── features/
 │   ├── couple/CouplePage.tsx
-│   ├── home/HomePage.tsx
+│   ├── home/
+│   │   ├── components/
+│   │   │   ├── AnniversaryCard.tsx
+│   │   │   ├── CoupleHero.tsx
+│   │   │   ├── DailyLoveNote.tsx
+│   │   │   ├── QuickActions.tsx
+│   │   │   ├── RecentMemories.tsx
+│   │   │   └── RelationshipCounter.tsx
+│   │   ├── data/
+│   │   │   ├── demoCouple.ts
+│   │   │   └── loveNotes.ts
+│   │   ├── hooks/useRelationshipDuration.ts
+│   │   └── HomePage.tsx
 │   ├── letters/LettersPage.tsx
-│   ├── memories/MemoriesPage.tsx
+│   ├── memories/
+│   │   ├── components/
+│   │   │   ├── GalleryCard.tsx
+│   │   │   ├── MemoryDetail.tsx
+│   │   │   ├── MemoryFilters.tsx
+│   │   │   └── RecentlyDeleted.tsx
+│   │   ├── MemoriesPage.tsx
+│   │   └── types.ts
 │   └── timeline/
 │       ├── assets/*.svg
 │       ├── components/
@@ -224,13 +252,13 @@ Feature directories may contain their own `components`, `hooks`, `api`, `schemas
 
 | Path        | Current screen                |
 | ----------- | ----------------------------- |
-| `/`         | Home placeholder              |
+| `/`         | Interactive Home frontend     |
 | `/timeline` | Interactive Timeline frontend |
-| `/memories` | Memories placeholder          |
+| `/memories` | Interactive Memories Gallery  |
 | `/letters`  | Love Letters placeholder      |
 | `/us`       | Couple Profile placeholder    |
 
-Home, Memories, Love Letters, and Couple Profile intentionally contain only a page header and empty-state copy. Timeline is an interactive local-state frontend. Authentication guards and the expanded route plan below will be added in their corresponding phases.
+Love Letters and Couple Profile intentionally contain only a page header and empty-state copy. Home, Timeline, and Memories share one interactive session-state provider. Authentication guards and the expanded route plan below will be added in their corresponding phases.
 
 ## Implemented design system
 
@@ -240,6 +268,62 @@ Home, Memories, Love Letters, and Couple Profile intentionally contain only a pa
 - **Primitives:** Typed buttons, icon buttons, cards, page headers, and empty states with shared sizing, color, radius, shadow, focus, and disabled-state conventions.
 - **Motion:** Short page fades/translations and press feedback only; system reduced-motion preferences disable nonessential movement.
 - **Tokens:** Coral-pink accent, neutral surfaces and text, 12–16 px corner radii, subtle elevation, system typography, and consistent content widths.
+
+## Shared frontend memory architecture
+
+`MemoriesProvider` is mounted above the router and owns the single frontend collection used by Home, Timeline, and Memories. The `useMemories` hook exposes active and deleted views plus stable create, update, soft-delete, restore, permanent-delete, and favorite-toggle operations.
+
+- Active views automatically exclude records with a `deletedAt` timestamp.
+- Soft deletion records `deletedAt`, `deletedBy`, and an updated timestamp without removing the memory.
+- Restoration clears deletion metadata; permanent removal is available only from Recently Deleted after confirmation.
+- Favorites remain a boolean property on the shared memory record rather than a separate model.
+- Uploaded images use validated in-memory data URLs, so the implementation does not allocate unmanaged object URLs.
+- Context state is intentionally not written to local storage or a backend. The complete collection resets to fictional demo data on refresh.
+- Route-level lazy loading keeps feature screens in separate production chunks.
+
+The provider API is the temporary frontend boundary that will later be replaced or backed by typed Supabase queries, RLS-protected mutations, Storage uploads, and realtime cache synchronization.
+
+## Implemented Memories frontend
+
+The `/memories` route provides a responsive shared photo-journal experience with:
+
+- A two-column, touch-friendly gallery using lazy-loaded images, stable aspect ratios, captions, dates, and graceful non-photo placeholders
+- Working All, Photos, Milestones, and Favorites filters over the current shared state
+- Full-screen memory details with image, title, date, description, milestone type, creator, and favorite status
+- Favorite toggling synchronized immediately with Gallery and Timeline indicators
+- Reused Timeline form and accessible dialog infrastructure for adding and editing memories
+- Confirmed soft deletion that immediately hides memories from Home, Timeline, and Gallery
+- Recently Deleted with restore and separately confirmed permanent removal
+- Empty states for the gallery, filters, Home recent memories, and Recently Deleted
+
+### Memories limitations before Supabase
+
+- All changes exist only for the current page session and reset on refresh.
+- Uploaded images are held as in-memory data URLs and are not compressed, uploaded, or shared across devices.
+- Recently Deleted has no automatic expiry, retention window, or server-side recovery.
+- Favorites and deletion metadata are frontend fields only and have no database enforcement.
+- The current creator is a neutral local label because authentication is not implemented.
+
+## Implemented Home frontend
+
+The `/` route now provides a responsive, mobile-first Home experience with:
+
+- A time-of-day greeting, compact app identity, and neutral placeholder couple avatars
+- A fictional couple hero with configurable names, relationship start date, and caption
+- A live relationship counter showing total calendar days, calendar-aware years/months/days, and a non-announced seconds display
+- Safe handling for invalid and future start dates, with a one-second timer that is isolated to the counter and cleaned up on unmount
+- Monthly and yearly anniversary countdowns that clamp dates correctly at month end, including start dates on the 29th, 30th, or 31st
+- An original local collection of love notes selected deterministically by the device's local calendar date, plus a manual next-note action
+- The latest three records from the shared typed Timeline demo module, with navigation to the Timeline route
+- Compact navigation actions for adding a memory, viewing Timeline, and visiting the clearly unfinished Letters screen
+
+### Home limitations before Supabase
+
+- Couple names, initials, caption, relationship date, notes, and memories are fictional local demo data.
+- Home reads the shared provider, so Timeline and Gallery changes appear immediately during the same browser session.
+- The Add Memory action opens Timeline, where the existing floating action button starts the form; it does not open a global form from Home.
+- The Write Letter action opens the current placeholder Letters route and is labeled as coming later.
+- Relationship settings, identity, persistence, and cross-device synchronization require the planned Supabase integration.
 
 ## Implemented Timeline frontend
 
@@ -256,11 +340,11 @@ The `/timeline` route now provides a polished, responsive frontend prototype wit
 
 ### Timeline limitations before Supabase
 
-- Timeline state is held only in React memory. Added, edited, or deleted memories reset when the page is refreshed.
+- Timeline state comes from the shared React provider. Added, edited, favorited, restored, or deleted memories reset when the page is refreshed.
 - Selected images remain only as in-memory data URLs and are not uploaded or persisted.
 - The displayed author values are neutral demo/local labels; no authenticated user identity exists yet.
 - Equal partner permissions are part of the planned Supabase authorization model and are not enforced by this frontend prototype.
-- Deletion is immediate after confirmation; planned database-backed soft deletion and recovery are not implemented.
+- Deletion is a temporary frontend soft delete with restoration from the Memories screen; database retention and recovery policies are not implemented.
 
 ## Planned routing
 

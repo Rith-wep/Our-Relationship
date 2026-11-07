@@ -25,6 +25,9 @@ export interface TimelineMemory {
   createdBy: string
   createdAt: string
   updatedAt: string
+  isFavorite: boolean
+  deletedAt?: string
+  deletedBy?: string
 }
 
 export interface MemoryDraft {

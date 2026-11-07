@@ -1,9 +1,9 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
+import { useMemories } from '@/app/providers/useMemories'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
-import { demoMemories } from '@/features/timeline/data/demoMemories'
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
 import { MemoryForm } from '@/features/timeline/components/MemoryForm'
 import { PhotoViewer } from '@/features/timeline/components/PhotoViewer'
@@ -11,7 +11,8 @@ import { TimelineList } from '@/features/timeline/components/TimelineList'
 import type { MemoryDraft, TimelineMemory } from '@/features/timeline/types'
 
 export function TimelinePage() {
-  const [memories, setMemories] = useState<TimelineMemory[]>(demoMemories)
+  const { activeMemories, createMemory, updateMemory, deleteMemory } =
+    useMemories()
   const [formMemory, setFormMemory] = useState<
     TimelineMemory | null | undefined
   >()
@@ -22,10 +23,10 @@ export function TimelinePage() {
 
   const sortedMemories = useMemo(
     () =>
-      [...memories].sort((first, second) =>
+      [...activeMemories].sort((first, second) =>
         first.date.localeCompare(second.date),
       ),
-    [memories],
+    [activeMemories],
   )
 
   const closeForm = useCallback(() => setFormMemory(undefined), [])
@@ -33,27 +34,10 @@ export function TimelinePage() {
   const closePhoto = useCallback(() => setPhotoMemory(null), [])
 
   const handleSave = (draft: MemoryDraft) => {
-    const now = new Date().toISOString()
-
     if (formMemory) {
-      setMemories((current) =>
-        current.map((memory) =>
-          memory.id === formMemory.id
-            ? { ...memory, ...draft, updatedAt: now }
-            : memory,
-        ),
-      )
+      updateMemory(formMemory.id, draft)
     } else {
-      setMemories((current) => [
-        ...current,
-        {
-          ...draft,
-          id: crypto.randomUUID(),
-          createdBy: 'Local user',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ])
+      createMemory(draft)
     }
 
     closeForm()
@@ -61,9 +45,7 @@ export function TimelinePage() {
 
   const handleConfirmDelete = () => {
     if (!memoryToDelete) return
-    setMemories((current) =>
-      current.filter((memory) => memory.id !== memoryToDelete.id),
-    )
+    deleteMemory(memoryToDelete.id)
     closeDeleteDialog()
   }
 
@@ -114,15 +96,15 @@ export function TimelinePage() {
 
       <MemoryDialog
         open={Boolean(memoryToDelete)}
-        title="Delete this memory?"
-        description="This removes it from the current session. This action cannot be undone."
+        title="Move to Recently Deleted?"
+        description="You can restore this memory from the Memories screen during the current session."
         onClose={closeDeleteDialog}
         size="compact"
       >
         <div className="p-5">
           <p className="text-sm leading-6 text-text-secondary">
             {memoryToDelete
-              ? `“${memoryToDelete.title}” will be removed from the timeline.`
+              ? `“${memoryToDelete.title}” will be hidden from Home, Timeline, and Gallery.`
               : null}
           </p>
           <div className="mt-5 flex gap-3">
