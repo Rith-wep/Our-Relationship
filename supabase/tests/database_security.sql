@@ -1,6 +1,6 @@
 begin;
 
-select plan(54);
+select plan(65);
 
 -- Synthetic identities. These UUIDs and addresses are test-only.
 insert into auth.users (id, email)
@@ -307,6 +307,40 @@ select throws_ok(
 );
 reset role;
 
+-- Optional connection data and lightweight Thinking of You signals.
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', true);
+set local role authenticated;
+select lives_ok(
+  $$update public.profiles set city = 'Test City', country = 'Test Country', timezone = 'Asia/Kolkata' where id = auth.uid()$$,
+  'member can update their own optional location and timezone'
+);
+select throws_ok(
+  $$update public.profiles set timezone = 'Mars/Olympus' where id = auth.uid()$$,
+  '22023', null, 'unsupported timezone is rejected'
+);
+select lives_ok(
+  $$update public.couples set next_time_together = current_date + 30 where id = '10000000-0000-4000-8000-000000000001'$$,
+  'couple member can set the next time together'
+);
+select lives_ok(
+  $$insert into public.thinking_of_you (couple_id, sender_id) values ('10000000-0000-4000-8000-000000000001', auth.uid())$$,
+  'couple member can send a Thinking of You signal'
+);
+reset role;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000c', true);
+set local role authenticated;
+select is(
+  (select count(*) from public.thinking_of_you where couple_id = '10000000-0000-4000-8000-000000000001'),
+  0::bigint,
+  'unrelated member cannot read another couple Thinking of You signals'
+);
+select throws_ok(
+  $$insert into public.thinking_of_you (couple_id, sender_id) values ('10000000-0000-4000-8000-000000000001', auth.uid())$$,
+  '42501', null, 'unrelated member cannot send into another couple'
+);
+reset role;
+
 -- Structural assertions complement the behavior checks above.
 select ok((select not public from storage.buckets where id = 'couple-media'), 'media bucket is private');
 select is((select file_size_limit from storage.buckets where id = 'couple-media'), 26214400::bigint, 'media bucket enforces 25 MiB limit');
@@ -318,6 +352,58 @@ select ok(
   'invitation acceptance has an empty search_path'
 );
 select is((select prosecdef from pg_proc where oid = 'public.accept_couple_invitation(text)'::regprocedure), true, 'invitation acceptance is SECURITY DEFINER');
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = any (array[
+        'couples', 'profiles', 'memories', 'love_letters',
+        'love_letter_mailboxes', 'dreams', 'important_dates'
+      ])
+  ),
+  7::bigint,
+  'all synchronized tables are in the realtime publication'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_class
+    where oid = any (array[
+      'public.couples'::regclass,
+      'public.profiles'::regclass,
+      'public.memories'::regclass,
+      'public.love_letters'::regclass,
+      'public.love_letter_mailboxes'::regclass,
+      'public.dreams'::regclass,
+      'public.important_dates'::regclass
+    ])
+      and relreplident = 'f'
+  ),
+  7::bigint,
+  'synchronized tables expose full rows for update and delete events'
+);
+select ok(
+  not has_function_privilege('anon', 'public.valid_profile_object_path(text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.owns_profile_object_path(text)', 'EXECUTE'),
+  'anonymous role cannot execute profile path helpers'
+);
+select ok(
+  (select relrowsecurity from pg_catalog.pg_class where oid = 'public.thinking_of_you'::regclass),
+  'Thinking of You table has RLS enabled'
+);
+select is(
+  (
+    select count(*)
+    from pg_catalog.pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'thinking_of_you'
+  ),
+  1::bigint,
+  'Thinking of You signals are published to Realtime'
+);
 
 select * from finish();
 rollback;

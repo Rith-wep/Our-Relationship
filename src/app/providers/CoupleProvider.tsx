@@ -17,11 +17,13 @@ import type {
   DreamDraft,
   ImportantDate,
   SpecialDateDraft,
+  ThinkingOfYou,
 } from '@/features/couple/types'
 import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 import {
   createDateRecord,
   createDreamRecord,
+  createThinkingOfYou,
   deleteDateRecord,
   deleteDreamRecord,
   loadCoupleData,
@@ -31,6 +33,7 @@ import {
   updateDateRecord,
   updateDreamRecord,
 } from '@/lib/supabase/services/couple-service'
+import { useRealtimeSubscription } from '@/lib/supabase/useRealtimeSubscription'
 
 const emptyProfile: CoupleProfile = {
   partners: [
@@ -39,6 +42,7 @@ const emptyProfile: CoupleProfile = {
   ],
   relationshipStartDate: '',
   description: '',
+  nextTimeTogether: '',
 }
 
 export function CoupleProvider({ children }: { children: ReactNode }) {
@@ -47,6 +51,8 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<CoupleProfile>(emptyProfile)
   const [dreams, setDreams] = useState<Dream[]>([])
   const [importantDates, setImportantDates] = useState<ImportantDate[]>([])
+  const [latestThinkingOfYou, setLatestThinkingOfYou] =
+    useState<ThinkingOfYou | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -58,6 +64,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
         setProfile(emptyProfile)
         setDreams([])
         setImportantDates([])
+        setLatestThinkingOfYou(null)
         setLoading(false)
         return
       }
@@ -71,6 +78,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
         setProfile(data.profile)
         setDreams(data.dreams)
         setImportantDates(data.importantDates)
+        setLatestThinkingOfYou(data.latestThinkingOfYou)
       } catch (caught) {
         setError(
           caught instanceof Error
@@ -88,6 +96,35 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
     const timeout = window.setTimeout(() => void retry(), 0)
     return () => window.clearTimeout(timeout)
   }, [retry])
+
+  const realtimeTargets = useMemo(() => {
+    if (!session.couple) return []
+    return [
+      { table: 'couples', filter: `id=eq.${session.couple.coupleId}` },
+      ...session.couple.members.map((member) => ({
+        table: 'profiles',
+        filter: `id=eq.${member.userId}`,
+      })),
+      {
+        table: 'dreams',
+        filter: `couple_id=eq.${session.couple.coupleId}`,
+      },
+      {
+        table: 'important_dates',
+        filter: `couple_id=eq.${session.couple.coupleId}`,
+      },
+      {
+        table: 'thinking_of_you',
+        filter: `couple_id=eq.${session.couple.coupleId}`,
+      },
+    ]
+  }, [session.couple])
+  const realtimeState = useRealtimeSubscription({
+    enabled: Boolean(session.couple && auth.user),
+    name: `couple:${session.couple?.coupleId ?? 'signed-out'}`,
+    targets: realtimeTargets,
+    onChange: () => retry(false),
+  })
 
   const runMutation = useCallback(
     async (operation: () => Promise<void>) => {
@@ -214,19 +251,31 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
     [runMutation],
   )
 
+  const sendThinkingOfYou = useCallback(
+    () =>
+      runMutation(async () => {
+        if (!session.couple || !auth.user) throw new Error('Not signed in.')
+        await createThinkingOfYou(session.couple.coupleId, auth.user.id)
+      }),
+    [auth.user, runMutation, session.couple],
+  )
+
   const value = useMemo<CoupleContextValue>(
     () => ({
       profile,
       dreams,
       importantDates,
+      latestThinkingOfYou,
       loading,
       error,
       uploadingPhoto,
       photoUploadProgress,
+      realtimeState,
       retry,
       updateProfile,
       uploadProfilePhoto,
       removeProfilePhoto,
+      sendThinkingOfYou,
       createDream,
       updateDream,
       toggleDream,
@@ -243,10 +292,13 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
       dreams,
       error,
       importantDates,
+      latestThinkingOfYou,
       loading,
       profile,
       photoUploadProgress,
+      realtimeState,
       removeProfilePhoto,
+      sendThinkingOfYou,
       retry,
       toggleDream,
       updateDream,

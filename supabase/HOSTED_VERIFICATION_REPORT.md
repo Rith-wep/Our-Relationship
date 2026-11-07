@@ -1,5 +1,11 @@
 # Hosted Supabase database verification report
 
+## Step 15 post-deployment update — 2026-11-08
+
+Migration `202611080005_profile_media_storage.sql` was applied to confirmed project `jthkuepideccbiqjqeci` after explicit approval. A subsequent dry run reported no pending migrations. A read-only hosted schema dump confirmed `avatar_mime_type`, `avatar_size_bytes`, the metadata consistency constraint, both profile path helpers, four profile-media Storage policies, and RLS on every application table.
+
+Migrations `202611080006_realtime_publication.sql` and `202611080007_connection_features.sql` were subsequently applied after explicit approval. A final dry run reported no pending migrations. Read-only inspection confirmed eight Realtime publication members, full replica identity, profile location fields and timezone validation, `next_time_together`, the RLS-enabled `thinking_of_you` table, and its member-only select/insert policies.
+
 Date: 2026-11-07  
 Project: `Our-Relationship` (`jthkuepideccbiqjqeci`)  
 Environment: hosted production, `ap-northeast-2`  

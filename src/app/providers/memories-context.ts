@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 
 import type { MemoryDraft, TimelineMemory } from '@/features/timeline/types'
+import type { RealtimeState } from '@/lib/supabase/useRealtimeSubscription'
 
 export interface MemoriesContextValue {
   memories: TimelineMemory[]
@@ -10,6 +11,7 @@ export interface MemoriesContextValue {
   error: string | null
   uploading: boolean
   uploadProgress: number
+  realtimeState: RealtimeState
   retry: () => Promise<void>
   createMemory: (draft: MemoryDraft) => Promise<void>
   updateMemory: (id: string, draft: MemoryDraft) => Promise<void>

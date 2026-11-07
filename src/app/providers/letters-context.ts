@@ -5,11 +5,13 @@ import type {
   LoveLetter,
   PartnerId,
 } from '@/features/letters/types'
+import type { RealtimeState } from '@/lib/supabase/useRealtimeSubscription'
 
 export interface LettersContextValue {
   letters: LoveLetter[]
   loading: boolean
   error: string | null
+  realtimeState: RealtimeState
   retry: () => Promise<void>
   createDraft: (input: LetterDraftInput) => Promise<void>
   updateDraft: (

@@ -4,6 +4,9 @@ export interface ProfileRow {
   avatar_path: string | null
   avatar_mime_type: string | null
   avatar_size_bytes: number | null
+  city: string | null
+  country: string | null
+  timezone: string | null
   created_at: string
   updated_at: string
 }
@@ -25,8 +28,16 @@ export interface CoupleRow {
   created_by: string
   relationship_start_date: string | null
   description: string
+  next_time_together: string | null
   created_at: string
   updated_at: string
+}
+
+export interface ThinkingOfYouRow {
+  id: string
+  couple_id: string
+  sender_id: string
+  created_at: string
 }
 
 export interface MemoryRow {

@@ -22,6 +22,7 @@ import {
   softDeleteMemoryRecord,
   updateMemoryRecord,
 } from '@/lib/supabase/services/memories-service'
+import { useRealtimeSubscription } from '@/lib/supabase/useRealtimeSubscription'
 
 export function MemoriesProvider({ children }: { children: ReactNode }) {
   const auth = useAuth()
@@ -68,6 +69,25 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
     const timeout = window.setTimeout(() => void retry(), 0)
     return () => window.clearTimeout(timeout)
   }, [retry])
+
+  const realtimeTargets = useMemo(
+    () =>
+      session.couple
+        ? [
+            {
+              table: 'memories',
+              filter: `couple_id=eq.${session.couple.coupleId}`,
+            },
+          ]
+        : [],
+    [session.couple],
+  )
+  const realtimeState = useRealtimeSubscription({
+    enabled: Boolean(session.couple && auth.user),
+    name: `memories:${session.couple?.coupleId ?? 'signed-out'}`,
+    targets: realtimeTargets,
+    onChange: () => retry(false),
+  })
 
   const runMutation = useCallback(
     async (operation: () => Promise<void>) => {
@@ -174,6 +194,7 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
       error,
       uploading,
       uploadProgress,
+      realtimeState,
       retry,
       createMemory,
       updateMemory,
@@ -190,6 +211,7 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
     memories,
     uploadProgress,
     uploading,
+    realtimeState,
     permanentlyDeleteMemory,
     restoreMemory,
     retry,

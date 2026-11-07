@@ -1,5 +1,6 @@
 import { RouterProvider } from 'react-router'
 
+import { ThemeInitializer } from '@/components/layout/ThemeToggle'
 import { CoupleProvider } from '@/app/providers/CoupleProvider'
 import { LettersProvider } from '@/app/providers/LettersProvider'
 import { MemoriesProvider } from '@/app/providers/MemoriesProvider'
@@ -10,6 +11,7 @@ import { CoupleSessionProvider } from '@/features/onboarding/CoupleSessionProvid
 export function App() {
   return (
     <AuthProvider>
+      <ThemeInitializer />
       <CoupleSessionProvider>
         <CoupleProvider>
           <LettersProvider>

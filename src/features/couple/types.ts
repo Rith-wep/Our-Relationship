@@ -4,12 +4,23 @@ export interface CouplePartner {
   initial: string
   photo?: string
   photoPath?: string
+  city?: string
+  country?: string
+  timezone?: string
 }
 
 export interface CoupleProfile {
   partners: [CouplePartner, CouplePartner]
   relationshipStartDate: string
   description: string
+  nextTimeTogether: string
+}
+
+export interface ThinkingOfYou {
+  id: string
+  senderId: string
+  senderName: string
+  createdAt: string
 }
 
 export type DreamCategory =

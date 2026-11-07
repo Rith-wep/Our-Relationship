@@ -1,6 +1,14 @@
-import { CalendarDays, Info, LockKeyhole, Pencil } from 'lucide-react'
+import { CalendarDays, Info, LockKeyhole, MapPin, Pencil } from 'lucide-react'
 
-export function CoupleSettings({ onEdit }: { onEdit: () => void }) {
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
+
+export function CoupleSettings({
+  onEdit,
+  onConnection,
+}: {
+  onEdit: () => void
+  onConnection: () => void
+}) {
   const items = [
     {
       label: 'Edit Couple Profile',
@@ -11,6 +19,11 @@ export function CoupleSettings({ onEdit }: { onEdit: () => void }) {
       label: 'Relationship Start Date',
       icon: CalendarDays,
       action: onEdit,
+    },
+    {
+      label: 'Distance & time',
+      icon: MapPin,
+      action: onConnection,
     },
     {
       label: 'App Information',
@@ -26,7 +39,8 @@ export function CoupleSettings({ onEdit }: { onEdit: () => void }) {
       <h2 id="settings-title" className="text-lg font-semibold">
         Settings
       </h2>
-      <div className="mt-3 overflow-hidden rounded-card border border-border bg-white shadow-soft">
+      <div className="mt-3 overflow-hidden rounded-card border border-border bg-card shadow-soft">
+        <ThemeToggle variant="setting" />
         {items.map(({ label, icon: Icon, action }) => {
           const content = (
             <>

@@ -6,7 +6,7 @@
 
 **Frontend, Supabase Auth, secure couple onboarding, and database-backed relationship features are implemented.**
 
-The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, and private memory media. Profile-photo Storage support is implemented locally and awaits approval for its hosted migration. Realtime subscriptions, PWA behavior, and deployment remain planned.
+The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, and private media. Profile-photo Storage is deployed. Realtime synchronization is implemented and locally verified; its publication migration awaits hosted approval. PWA behavior and deployment remain planned.
 
 ### Implemented now
 
@@ -38,11 +38,15 @@ The repository contains a working React, Vite, and TypeScript application with T
 - Authenticated couple onboarding with profile creation, shared-space creation, email-bound seven-day invitation links, and secure invitation acceptance
 - Database-backed membership identity in Love Letters; the development Partner A/B switcher has been removed
 - Private memory photo/video uploads with validation, PostgreSQL metadata, short-lived signed URLs, progress states, replacement, and deletion cleanup
-- Private profile-photo upload/removal with owner-only writes and partner-readable signed URLs; hosted use requires migration `202611080005_profile_media_storage.sql`
+- Private profile-photo upload/removal with owner-only writes and partner-readable signed URLs
+- Scoped Realtime channels for memories, letters, mailboxes, profiles, couple details, dreams, and important dates
+- Debounced refreshes, automatic channel cleanup, reconnection handling, and a non-blocking reconnect notice
+- Optional city, country, and timezone per partner without precise or live location collection
+- Optional shared next-meeting date with a compact Home countdown
+- One-tap, timestamped Thinking of You signals with couple-scoped RLS and Realtime updates
 
 ### Not implemented yet
 
-- Realtime subscriptions
 - PWA manifest, service worker, offline behavior, and deployment configuration
 
 ## Product vision
@@ -323,7 +327,7 @@ The implemented Our Space frontend includes:
 - Important relationship dates with annual recurrence, upcoming-day calculations, custom add/edit/delete flows, and safe leap-year/month-end clamping
 - A minimal settings area that links back to profile editing and honestly labels authentication, notifications, accounts, and cloud privacy as planned
 
-Profile photos use private Storage objects and signed URLs. Each member can replace or remove only their own photo. No base64 or fictional profile data is persisted. The profile Storage migration is locally verified but not yet applied to hosted Supabase.
+Profile photos use private Storage objects and signed URLs. Each member can replace or remove only their own photo. No base64 or fictional profile data is persisted. The profile Storage migration is deployed and verified.
 
 ## Shared frontend memory architecture
 
@@ -392,7 +396,7 @@ The `/memories` route provides a responsive shared photo-journal experience with
 
 - Upload progress is staged around the Supabase upload request; the standard SDK does not expose byte-level progress.
 - Recently Deleted has no automatic expiry or retention window yet.
-- Realtime subscriptions are not implemented; remote changes appear after reload or the next mutation refresh.
+- Cross-device updates use the deployed Realtime publication.
 
 ## Implemented Home frontend
 
@@ -413,7 +417,7 @@ The `/` route now provides a responsive, mobile-first Home experience with:
 - Home reads shared database-backed providers, so Timeline and Gallery mutations appear immediately.
 - The Add Memory action opens Timeline, where the existing floating action button starts the form; it does not open a global form from Home.
 - The Write Letter action opens the persistent Love Letters experience.
-- Realtime cross-device synchronization remains planned.
+- Cross-device synchronization uses the deployed Realtime publication.
 
 ## Implemented Timeline frontend
 
@@ -430,7 +434,7 @@ The `/timeline` route now provides a polished, responsive frontend prototype wit
 ### Timeline limitations
 
 - One media file can currently be selected per memory in the UI, although the database model supports multiple rows.
-- Realtime subscriptions are not implemented.
+- Hosted Realtime delivery is enabled.
 - Soft deletion and restoration are persistent, but automated retention cleanup is not implemented.
 
 ## Planned routing
@@ -541,7 +545,19 @@ Privacy is a core data-model requirement, not only a UI feature.
 
 ## Realtime synchronization
 
-Supabase Realtime will subscribe only after authentication and couple membership resolution. Channels will be scoped to the active couple and limited to entities where immediate collaboration improves the experience, such as memories, bucket-list updates, love notes, and letter status.
+Authenticated providers subscribe only after couple membership resolves. Memories, letters, dreams, dates, and couple rows use couple-scoped filters; mailbox events are filtered to the authenticated user, and profile events are filtered to the two member IDs. PostgreSQL RLS remains the authorization boundary for every event.
+
+Event bursts are debounced into one canonical provider reload. Channels are removed on logout, couple change, and unmount. Timed-out or failed channels reconnect after a short delay, while the app displays a small non-blocking sync notice.
+
+Migration `202611080006_realtime_publication.sql` idempotently adds the seven synchronized tables to `supabase_realtime`, enables full replica identity for reliable update/delete refreshes, and removes unnecessary anonymous execution grants from the profile path helpers. It is deployed and verified.
+
+## Nearby and long-distance connection features
+
+Each partner may optionally save a city, country, and IANA timezone on their own profile. Precise coordinates and live GPS are never requested or stored. The couple may optionally share one `next_time_together` date.
+
+Home displays only configured connection details: partner cities, their current local times, the time difference, and the next-meeting countdown. Thinking of You is intentionally not chat; each event stores only its couple, sender, and timestamp, and Home shows the latest signal.
+
+These settings live in Our Space under Distance & time. Migration `202611080007_connection_features.sql` extends the existing tables, adds the RLS-protected signal table, and publishes it to Realtime. It is deployed and verified.
 
 The client should:
 
@@ -773,7 +789,7 @@ Copy `.env.example` to the ignored `.env` file and configure the hosted project'
 npm run dev
 ```
 
-Supabase Auth, PostgreSQL product data, and private memory Storage are connected through the browser-safe client. Couple profiles, memories, letters, dreams, dates, mailbox state, and memory media are persistent. Profile Storage is ready locally but requires explicit hosted migration approval. Realtime remains deferred. The project-local Supabase CLI and Docker are used for migration and RLS validation.
+Supabase Auth, PostgreSQL product data, private Storage, Realtime, and optional connection features are connected through the browser-safe client. Couple profiles, memories, letters, dreams, dates, mailbox state, media, connection details, and Thinking of You signals are persistent. The project-local Supabase CLI and Docker are used for migration and RLS validation.
 
 Available scripts:
 

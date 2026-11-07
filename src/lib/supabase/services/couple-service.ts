@@ -4,6 +4,7 @@ import type {
   DreamDraft,
   ImportantDate,
   SpecialDateDraft,
+  ThinkingOfYou,
 } from '@/features/couple/types'
 import { supabase } from '@/lib/supabase/client'
 import {
@@ -18,12 +19,14 @@ import {
   type DreamRow,
   type ImportantDateRow,
   type ProfileRow,
+  type ThinkingOfYouRow,
 } from '@/lib/supabase/services/types'
 
 export interface CoupleData {
   profile: CoupleProfile
   dreams: Dream[]
   importantDates: ImportantDate[]
+  latestThinkingOfYou: ThinkingOfYou | null
 }
 
 function throwIfError(error: { message: string } | null) {
@@ -58,21 +61,29 @@ export async function loadCoupleData(
   coupleId: string,
   memberIds: string[],
 ): Promise<CoupleData> {
-  const [coupleValue, profilesValue, dreamsValue, datesValue] =
+  const [coupleValue, profilesValue, dreamsValue, datesValue, thinkingValue] =
     await Promise.all([
       supabase.from('couples').select('*').eq('id', coupleId).single(),
       supabase.from('profiles').select('*').in('id', memberIds),
       supabase.from('dreams').select('*').eq('couple_id', coupleId),
       supabase.from('important_dates').select('*').eq('couple_id', coupleId),
+      supabase
+        .from('thinking_of_you')
+        .select('*')
+        .eq('couple_id', coupleId)
+        .order('created_at', { ascending: false })
+        .limit(1),
     ])
   const coupleResult = asServiceResult<CoupleRow>(coupleValue)
   const profilesResult = asServiceResult<ProfileRow[]>(profilesValue)
   const dreamsResult = asServiceResult<DreamRow[]>(dreamsValue)
   const datesResult = asServiceResult<ImportantDateRow[]>(datesValue)
+  const thinkingResult = asServiceResult<ThinkingOfYouRow[]>(thinkingValue)
   throwIfError(coupleResult.error)
   throwIfError(profilesResult.error)
   throwIfError(dreamsResult.error)
   throwIfError(datesResult.error)
+  throwIfError(thinkingResult.error)
   if (!coupleResult.data) throw new Error('Shared space was not found.')
 
   const profiles = new Map(
@@ -94,6 +105,9 @@ export async function loadCoupleData(
         ? avatarUrls.get(profile.avatar_path)
         : undefined,
       photoPath: profile?.avatar_path ?? undefined,
+      city: profile?.city ?? undefined,
+      country: profile?.country ?? undefined,
+      timezone: profile?.timezone ?? undefined,
     }
   })
   while (partners.length < 2) {
@@ -103,6 +117,9 @@ export async function loadCoupleData(
       initial: '?',
       photo: undefined,
       photoPath: undefined,
+      city: undefined,
+      country: undefined,
+      timezone: undefined,
     })
   }
 
@@ -111,9 +128,20 @@ export async function loadCoupleData(
       partners: [partners[0], partners[1]],
       relationshipStartDate: coupleResult.data.relationship_start_date ?? '',
       description: coupleResult.data.description,
+      nextTimeTogether: coupleResult.data.next_time_together ?? '',
     },
     dreams: (dreamsResult.data ?? []).map(mapDream),
     importantDates: (datesResult.data ?? []).map(mapDate),
+    latestThinkingOfYou: thinkingResult.data?.[0]
+      ? {
+          id: thinkingResult.data[0].id,
+          senderId: thinkingResult.data[0].sender_id,
+          senderName:
+            profiles.get(thinkingResult.data[0].sender_id)?.display_name ??
+            'Partner',
+          createdAt: thinkingResult.data[0].created_at,
+        }
+      : null,
   }
 }
 
@@ -182,15 +210,33 @@ export async function updateCoupleProfile(input: {
       .update({
         relationship_start_date: input.profile.relationshipStartDate || null,
         description: input.profile.description.trim(),
+        next_time_together: input.profile.nextTimeTogether || null,
       })
       .eq('id', input.coupleId),
     supabase
       .from('profiles')
-      .update({ display_name: currentPartner.name.trim() })
+      .update({
+        display_name: currentPartner.name.trim(),
+        city: currentPartner.city?.trim() || null,
+        country: currentPartner.country?.trim() || null,
+        timezone: currentPartner.timezone?.trim() || null,
+      })
       .eq('id', input.userId),
   ])
   throwIfError(asServiceResult<null>(coupleValue).error)
   throwIfError(asServiceResult<null>(profileValue).error)
+}
+
+export async function createThinkingOfYou(coupleId: string, userId: string) {
+  const result = asServiceResult<ThinkingOfYouRow>(
+    await supabase
+      .from('thinking_of_you')
+      .insert({ couple_id: coupleId, sender_id: userId })
+      .select('*')
+      .single(),
+  )
+  throwIfError(result.error)
+  if (!result.data) throw new Error('Thinking of You was not sent.')
 }
 
 export async function createDreamRecord(

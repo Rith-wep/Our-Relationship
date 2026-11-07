@@ -23,6 +23,7 @@ import {
   setLetterFavorite,
   updateDraftRecord,
 } from '@/lib/supabase/services/letters-service'
+import { useRealtimeSubscription } from '@/lib/supabase/useRealtimeSubscription'
 
 export function LettersProvider({ children }: { children: ReactNode }) {
   const auth = useAuth()
@@ -69,6 +70,29 @@ export function LettersProvider({ children }: { children: ReactNode }) {
     const timeout = window.setTimeout(() => void retry(), 0)
     return () => window.clearTimeout(timeout)
   }, [retry])
+
+  const realtimeTargets = useMemo(
+    () =>
+      session.couple && auth.user
+        ? [
+            {
+              table: 'love_letters',
+              filter: `couple_id=eq.${session.couple.coupleId}`,
+            },
+            {
+              table: 'love_letter_mailboxes',
+              filter: `user_id=eq.${auth.user.id}`,
+            },
+          ]
+        : [],
+    [auth.user, session.couple],
+  )
+  const realtimeState = useRealtimeSubscription({
+    enabled: Boolean(session.couple && auth.user),
+    name: `letters:${session.couple?.coupleId ?? 'signed-out'}:${auth.user?.id ?? ''}`,
+    targets: realtimeTargets,
+    onChange: () => retry(false),
+  })
 
   const runMutation = useCallback(
     async (operation: () => Promise<void>) => {
@@ -182,6 +206,7 @@ export function LettersProvider({ children }: { children: ReactNode }) {
       letters,
       loading,
       error,
+      realtimeState,
       retry,
       createDraft,
       updateDraft,
@@ -200,6 +225,7 @@ export function LettersProvider({ children }: { children: ReactNode }) {
       error,
       letters,
       loading,
+      realtimeState,
       markAsRead,
       restoreLetter,
       retry,

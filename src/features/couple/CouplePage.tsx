@@ -4,6 +4,7 @@ import { useCouple } from '@/app/providers/useCouple'
 import { Button } from '@/components/ui/Button'
 import { CoupleProfile } from '@/features/couple/components/CoupleProfile'
 import { CoupleSettings } from '@/features/couple/components/CoupleSettings'
+import { ConnectionSettingsForm } from '@/features/couple/components/ConnectionSettingsForm'
 import { DreamForm } from '@/features/couple/components/DreamForm'
 import { DreamsList } from '@/features/couple/components/DreamsList'
 import { EditCoupleProfile } from '@/features/couple/components/EditCoupleProfile'
@@ -23,6 +24,7 @@ export function CouplePage() {
   const couple = useCouple()
   const auth = useAuth()
   const [editProfile, setEditProfile] = useState(false)
+  const [editConnection, setEditConnection] = useState(false)
   const [dreamForm, setDreamForm] = useState<Dream | null | undefined>()
   const [dreamToDelete, setDreamToDelete] = useState<Dream | null>(null)
   const [dateForm, setDateForm] = useState<ImportantDate | null | undefined>()
@@ -46,12 +48,10 @@ export function CouplePage() {
         <p className="text-xs font-semibold tracking-wide text-primary uppercase">
           Our shared space
         </p>
-        <h1 className="page-title-outlined mt-1 text-2xl font-semibold tracking-[-0.02em]">
+        <h1 className="page-title-outlined mt-1 text-[1.75rem] leading-9 font-semibold tracking-[-0.02em]">
           Us
         </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Our story, our plans, and the days we keep close.
-        </p>
+        <p className="mt-1 text-sm text-text-secondary">Our life together.</p>
       </header>
       <CoupleProfile
         profile={couple.profile}
@@ -70,7 +70,10 @@ export function CouplePage() {
         onEdit={setDateForm}
         onDelete={setDateToDelete}
       />
-      <CoupleSettings onEdit={() => setEditProfile(true)} />
+      <CoupleSettings
+        onEdit={() => setEditProfile(true)}
+        onConnection={() => setEditConnection(true)}
+      />
       <InvitePartnerCard />
       <div>
         {signOutError ? (
@@ -98,7 +101,7 @@ export function CouplePage() {
       <MemoryDialog
         open={editProfile}
         title="Edit Couple Profile"
-        description="Keep your shared details up to date."
+        description="Update your details."
         onClose={() => setEditProfile(false)}
       >
         <EditCoupleProfile
@@ -112,6 +115,21 @@ export function CouplePage() {
           onSave={(profile) => {
             void couple.updateProfile(profile)
             setEditProfile(false)
+          }}
+        />
+      </MemoryDialog>
+      <MemoryDialog
+        open={editConnection}
+        title="Distance & time"
+        onClose={() => setEditConnection(false)}
+      >
+        <ConnectionSettingsForm
+          profile={couple.profile}
+          userId={auth.user?.id ?? ''}
+          onCancel={() => setEditConnection(false)}
+          onSave={(profile) => {
+            void couple.updateProfile(profile)
+            setEditConnection(false)
           }}
         />
       </MemoryDialog>
@@ -142,7 +160,7 @@ export function CouplePage() {
       <MemoryDialog
         open={Boolean(dreamToDelete)}
         title="Delete this dream?"
-        description="This dream will be permanently removed."
+        description="This cannot be undone."
         onClose={() => setDreamToDelete(null)}
         size="compact"
       >
@@ -171,7 +189,7 @@ export function CouplePage() {
       <MemoryDialog
         open={Boolean(dateToDelete)}
         title="Delete this special date?"
-        description="This custom date will be removed."
+        description="This cannot be undone."
         onClose={() => setDateToDelete(null)}
         size="compact"
       >

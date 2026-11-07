@@ -2,11 +2,11 @@
 
 ## Current verification status
 
-**Passed locally on PostgreSQL 17 — 53/53 assertions successful.**
+**Passed locally on PostgreSQL 17 — 69/69 assertions successful.**
 
-On 2026-11-07, a clean Docker-backed `supabase db reset` applied migrations `202611070001` through `202611070004` in order. `supabase test db` passed both test files: 49 core security assertions and four independent-session concurrency assertions.
+On 2026-11-08, a clean Docker-backed `supabase db reset` applied migrations `202611070001` through `202611080007` in order. `supabase test db` passed both test files: 65 core security assertions and four independent-session concurrency assertions.
 
-The linked hosted project was inspected read-only and remains unchanged. It has no application schema, and all four remote migrations are still pending.
+Hosted project `jthkuepideccbiqjqeci` has migrations 001–007 applied. Read-only post-deployment inspection confirmed the expected schema, RLS, Storage policies, replica identity, and Realtime publication membership.
 
 ## Verified environment
 
@@ -38,7 +38,7 @@ Executed test result:
 ```text
 database_security.sql .............. ok
 database_security_concurrency.sql .. ok
-Files=2, Tests=58
+Files=2, Tests=69
 All tests successful.
 Result: PASS
 ```
@@ -57,7 +57,7 @@ The read-only local inventory confirmed:
 
 ## Automated test coverage
 
-The 54-test core suite verifies:
+The 65-test core suite verifies:
 
 - anonymous denial and authenticated couple isolation;
 - direct membership and invitation mutation denial;
@@ -69,6 +69,8 @@ The 54-test core suite verifies:
 - cross-couple foreign-key denial and memory soft-delete restoration;
 - malformed/cross-couple Storage denial and authorized Storage access;
 - profile-object owner writes, partner reads, and unrelated-user denial;
+- Realtime publication membership, full replica identity, and anonymous helper denial;
+- optional location ownership, timezone validation, shared next-meeting updates, and Thinking of You isolation;
 - private bucket configuration, direct role privileges, `SECURITY DEFINER`, and empty `search_path` settings.
 
 The four-test concurrency suite opens two independent PostgreSQL sessions and confirms exactly one invitation can claim the final couple slot, the other receives the capacity error, only two members exist, and only the successful invitation is consumed.
@@ -96,11 +98,12 @@ No RLS policy, grant, trigger, migration, or security invariant was weakened.
 
 ## Remaining limitations
 
-- The first four hosted migrations are applied and verified. The profile-media migration remains local-only pending explicit approval.
+- Hosted migrations 001–007 are applied and structurally verified.
+- Supabase default grants expose broader table privileges on `thinking_of_you` than required; RLS still denies update/delete because no policies permit them. A future approved hardening migration should revoke those unused privileges explicitly.
 - Actual Storage HTTP upload/download behavior, signed URL expiry, and denial of public URLs still require integration tests.
 - Binary Storage cleanup after permanent memory deletion requires the planned trusted cleanup workflow.
 - Auth rate limits, retention, account deletion, backup restoration, and incident response remain operational work.
 - The hosted project lists no physical backup and has PITR disabled.
 - Supabase Auth leaked-password protection is currently disabled and should be enabled before production use.
 
-The local pass demonstrates migration compatibility and tested authorization behavior. On 2026-11-07, the first four migrations were applied to hosted project `jthkuepideccbiqjqeci` after explicit approval. Read-only post-deployment inventory confirmed those versions, 10 RLS-enabled tables, 27 public policies, four Storage policies, 14 functions, 14 triggers, 60 constraints, and the private `couple-media` bucket. The existing Auth-user aggregate remained 1. Hosted behavioral security tests were not run against the production user; the 58-test suite remains a local result. Migration `202611080005_profile_media_storage.sql` is not hosted yet.
+The local pass demonstrates migration compatibility and tested authorization behavior. Post-deployment schema verification confirmed profile location fields, next-meeting data, Thinking of You RLS, all eight Realtime publication members, full replica identity, profile media controls, and existing application-table RLS. Hosted behavioral security tests were not run against production users; the 69-test suite remains a local result.
