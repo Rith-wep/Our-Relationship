@@ -27,12 +27,9 @@ export function HomePage() {
           <p className="text-xs font-semibold tracking-wide text-primary uppercase">
             {greeting}
           </p>
-          <h1 className="mt-1 text-2xl leading-8 font-semibold tracking-[-0.025em] text-text-primary">
+          <h1 className="page-title-outlined mt-1 text-2xl leading-8 font-semibold tracking-[-0.025em]">
             Our Little Universe
           </h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            A little space, just for us.
-          </p>
         </div>
         <div
           className="flex shrink-0 -space-x-2 pt-1"
@@ -43,10 +40,10 @@ export function HomePage() {
               key={partner.name}
               aria-hidden="true"
               className={[
-                'flex size-9 items-center justify-center rounded-full border-2 border-white text-xs font-semibold',
+                'flex size-9 items-center justify-center rounded-full border-2 border-border text-xs font-semibold',
                 index === 0
-                  ? 'bg-rose-200 text-rose-800'
-                  : 'bg-orange-100 text-orange-800',
+                  ? 'bg-primary-soft text-primary-strong'
+                  : 'bg-surface text-text-secondary',
               ].join(' ')}
             >
               {partner.photo ? (
@@ -71,11 +68,6 @@ export function HomePage() {
       <DailyLoveNote />
       <RecentMemories memories={activeMemories} />
       <QuickActions />
-
-      <p className="text-center text-[11px] leading-4 text-text-muted">
-        Memories are shared across this session and reset when the page
-        refreshes.
-      </p>
     </div>
   )
 }

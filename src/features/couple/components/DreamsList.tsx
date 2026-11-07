@@ -71,7 +71,7 @@ export function DreamsList({
             key={item}
             aria-pressed={filter === item}
             onClick={() => setFilter(item)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-semibold capitalize ${filter === item ? 'border-primary bg-primary text-white' : 'border-border-strong text-text-secondary'}`}
+            className={`min-h-11 rounded-full border px-4 text-sm font-semibold capitalize ${filter === item ? 'border-border-strong bg-primary text-text-primary' : 'border-border-strong bg-card text-text-secondary'}`}
           >
             {item}
           </button>
@@ -93,7 +93,7 @@ export function DreamsList({
                       ? `Mark ${dream.title} planned`
                       : `Mark ${dream.title} completed`
                   }
-                  className={`flex size-11 shrink-0 items-center justify-center rounded-full ${dream.completed ? 'bg-primary text-white' : 'bg-primary-soft text-primary'}`}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button"
                 >
                   {dream.completed ? (
                     <Check className="size-5" />

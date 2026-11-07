@@ -25,11 +25,11 @@ const sizeStyles = {
     'mt-auto max-h-[min(90dvh,48rem)] w-full max-w-app rounded-t-[1.25rem] sm:my-auto sm:rounded-card',
   compact: 'm-auto w-[calc(100%-2rem)] max-w-sm rounded-card',
   viewer:
-    'm-auto h-full w-full bg-black sm:h-auto sm:max-h-[92dvh] sm:max-w-3xl sm:rounded-card',
+    'm-auto h-full w-full bg-dark text-on-dark sm:h-auto sm:max-h-[92dvh] sm:max-w-3xl sm:rounded-card',
   detail:
     'm-0 h-full w-full max-w-app sm:m-auto sm:h-[min(92dvh,50rem)] sm:rounded-card',
   letter:
-    'm-0 h-full w-full max-w-app bg-[#fffbf5] sm:m-auto sm:h-[min(92dvh,50rem)] sm:rounded-card',
+    'm-0 h-full w-full max-w-app bg-card sm:m-auto sm:h-[min(92dvh,50rem)] sm:rounded-card',
 } as const
 
 const focusableSelector = [
@@ -127,7 +127,7 @@ export function MemoryDialog({
             tabIndex={-1}
             onKeyDown={handleFocusTrap}
             className={[
-              'relative overflow-hidden bg-background shadow-shell',
+              'relative overflow-hidden bg-card shadow-shell',
               sizeStyles[size],
             ].join(' ')}
             initial={

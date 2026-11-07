@@ -1,5 +1,5 @@
-import { Camera } from 'lucide-react'
-import { type ChangeEvent, type FormEvent, useState } from 'react'
+import { ImagePlus, Trash2, UserRound } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
 
 import { Button } from '@/components/ui/Button'
 import type { CoupleProfile } from '@/features/couple/types'
@@ -8,35 +8,26 @@ export function EditCoupleProfile({
   profile,
   onCancel,
   onSave,
+  editablePartnerId,
+  onUploadPhoto,
+  onRemovePhoto,
+  uploading = false,
+  uploadProgress = 0,
 }: {
   profile: CoupleProfile
   onCancel: () => void
   onSave: (profile: CoupleProfile) => void
+  editablePartnerId: string
+  onUploadPhoto: (file: File) => void
+  onRemovePhoto: () => void
+  uploading?: boolean
+  uploadProgress?: number
 }) {
   const [draft, setDraft] = useState(profile)
   const [error, setError] = useState('')
+  const [photoFile, setPhotoFile] = useState<File>()
   const input =
-    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base focus:border-primary'
-
-  const handlePhoto = (index: 0 | 1, event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024) {
-      setError('Choose an image file smaller than 8 MB.')
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') return
-      setDraft((current) => {
-        const partners = [...current.partners] as CoupleProfile['partners']
-        partners[index] = { ...partners[index], photo: reader.result as string }
-        return { ...current, partners }
-      })
-      setError('')
-    }
-    reader.readAsDataURL(file)
-  }
+    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base'
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -57,6 +48,7 @@ export function EditCoupleProfile({
       })) as CoupleProfile['partners'],
       description: draft.description.trim(),
     })
+    if (photoFile) onUploadPhoto(photoFile)
   }
 
   return (
@@ -68,7 +60,7 @@ export function EditCoupleProfile({
               <label className="mb-2 block text-sm font-medium text-text-primary">
                 Partner {index === 0 ? 'A' : 'B'}
               </label>
-              <label className="mb-3 flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border-strong bg-surface text-primary has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary">
+              <div className="mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-primary shadow-soft">
                 {partner.photo ? (
                   <img
                     src={partner.photo}
@@ -76,19 +68,14 @@ export function EditCoupleProfile({
                     className="size-full object-cover"
                   />
                 ) : (
-                  <Camera aria-hidden="true" className="size-6" />
+                  <UserRound aria-hidden="true" className="size-6" />
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(event) => handlePhoto(index as 0 | 1, event)}
-                />
-              </label>
+              </div>
               <input
                 value={partner.name}
                 aria-label={`Partner ${index === 0 ? 'A' : 'B'} name`}
                 maxLength={50}
+                disabled={partner.id !== editablePartnerId}
                 onChange={(event) => {
                   const partners = [
                     ...draft.partners,
@@ -103,6 +90,70 @@ export function EditCoupleProfile({
               />
             </div>
           ))}
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">
+            Your profile picture
+          </label>
+          <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-control border border-border bg-surface px-3.5 text-sm text-text-secondary hover:border-border-strong">
+            <ImagePlus className="size-5 text-primary" />
+            <span className="truncate">
+              {photoFile?.name ?? 'Choose a JPEG, PNG, WebP, or GIF'}
+            </span>
+            <input
+              type="file"
+              className="sr-only"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={uploading}
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (!file) return
+                if (
+                  ![
+                    'image/jpeg',
+                    'image/png',
+                    'image/webp',
+                    'image/gif',
+                  ].includes(file.type) ||
+                  file.size === 0 ||
+                  file.size > 8 * 1024 * 1024
+                ) {
+                  setError(
+                    'Choose a supported profile picture smaller than 8 MB.',
+                  )
+                  event.target.value = ''
+                  return
+                }
+                setError('')
+                setPhotoFile(file)
+              }}
+            />
+          </label>
+          {draft.partners.find((partner) => partner.id === editablePartnerId)
+            ?.photo ? (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={onRemovePhoto}
+              className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+            >
+              <Trash2 className="size-4" />
+              Remove current picture
+            </button>
+          ) : null}
+          {uploading ? (
+            <div className="mt-2">
+              <div className="h-2 overflow-hidden rounded-full bg-primary-soft">
+                <div
+                  className="h-full bg-primary"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-text-secondary">
+                Uploading securely… {uploadProgress}%
+              </p>
+            </div>
+          ) : null}
         </div>
         <div>
           <label
@@ -146,10 +197,15 @@ export function EditCoupleProfile({
         ) : null}
       </div>
       <div className="flex gap-3 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <Button variant="secondary" fullWidth onClick={onCancel}>
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={onCancel}
+          disabled={uploading}
+        >
           Cancel
         </Button>
-        <Button type="submit" fullWidth>
+        <Button type="submit" fullWidth disabled={uploading}>
           Save Profile
         </Button>
       </div>

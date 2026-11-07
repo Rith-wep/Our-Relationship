@@ -27,7 +27,7 @@ export function BottomNavigation() {
   return (
     <nav
       aria-label="Primary navigation"
-      className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-background pb-nav-safe"
+      className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card pb-nav-safe"
     >
       <ul className="mx-auto grid h-16 max-w-content grid-cols-5 px-1">
         {navigationItems.map(({ label, path, icon: Icon, end }) => (

@@ -43,9 +43,9 @@ export function QuickActions() {
           <Link
             key={label}
             to={path}
-            className="flex min-h-28 min-w-0 flex-col items-center justify-center rounded-card border border-border bg-background px-2 py-3 text-center shadow-soft transition-colors hover:border-primary/25 hover:bg-primary-soft/40 motion-reduce:transition-none"
+            className="flex min-h-28 min-w-0 flex-col items-center justify-center rounded-card border border-border bg-card px-2 py-3 text-center shadow-soft transition-colors hover:bg-primary-soft/40 motion-reduce:transition-none"
           >
-            <span className="flex size-9 items-center justify-center rounded-full bg-primary-soft text-primary">
+            <span className="flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-button">
               <Icon aria-hidden="true" className="size-[18px]" />
             </span>
             <span className="mt-2 text-xs font-semibold text-text-primary">

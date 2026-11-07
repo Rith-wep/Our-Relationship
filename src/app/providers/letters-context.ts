@@ -8,15 +8,22 @@ import type {
 
 export interface LettersContextValue {
   letters: LoveLetter[]
-  createDraft: (input: LetterDraftInput) => LoveLetter
-  updateDraft: (id: string, ownerId: PartnerId, input: LetterDraftInput) => void
-  deleteDraft: (id: string, ownerId: PartnerId) => void
-  sendLetter: (id: string, ownerId: PartnerId) => void
-  createAndSendLetter: (input: LetterDraftInput) => LoveLetter
-  markAsRead: (id: string, recipientId: PartnerId) => void
-  toggleFavorite: (id: string, participantId: PartnerId) => void
-  softDelete: (id: string, participantId: PartnerId) => void
-  restoreLetter: (id: string, participantId: PartnerId) => void
+  loading: boolean
+  error: string | null
+  retry: () => Promise<void>
+  createDraft: (input: LetterDraftInput) => Promise<void>
+  updateDraft: (
+    id: string,
+    ownerId: PartnerId,
+    input: LetterDraftInput,
+  ) => Promise<void>
+  deleteDraft: (id: string, ownerId: PartnerId) => Promise<void>
+  sendLetter: (id: string, ownerId: PartnerId) => Promise<void>
+  createAndSendLetter: (input: LetterDraftInput) => Promise<void>
+  markAsRead: (id: string, recipientId: PartnerId) => Promise<void>
+  toggleFavorite: (id: string, participantId: PartnerId) => Promise<void>
+  softDelete: (id: string, participantId: PartnerId) => Promise<void>
+  restoreLetter: (id: string, participantId: PartnerId) => Promise<void>
 }
 
 export const LettersContext = createContext<LettersContextValue | null>(null)

@@ -20,7 +20,7 @@ export function DreamForm({
   const [targetDate, setTargetDate] = useState(dream?.targetDate ?? '')
   const [error, setError] = useState('')
   const field =
-    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base focus:border-primary'
+    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base'
 
   const submit = (event: FormEvent) => {
     event.preventDefault()

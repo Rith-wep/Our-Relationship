@@ -1,11 +1,21 @@
+import { Heart } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Outlet, useLocation } from 'react-router'
 
 import { BottomNavigation } from '@/components/layout/BottomNavigation'
+import { useCouple } from '@/app/providers/useCouple'
+import { useLetters } from '@/app/providers/useLetters'
+import { useMemories } from '@/app/providers/useMemories'
+import { Button } from '@/components/ui/Button'
 
 export function AppShell() {
   const location = useLocation()
   const shouldReduceMotion = useReducedMotion()
+  const couple = useCouple()
+  const memories = useMemories()
+  const letters = useLetters()
+  const loading = couple.loading || memories.loading || letters.loading
+  const error = couple.error ?? memories.error ?? letters.error
 
   return (
     <div className="flex min-h-dvh justify-center bg-app-surround sm:p-4 lg:p-6">
@@ -26,7 +36,52 @@ export function AppShell() {
               }}
               className="mx-auto min-h-full w-full max-w-content"
             >
-              <Outlet />
+              {loading ? (
+                <div
+                  className="flex min-h-[70dvh] items-center justify-center text-center"
+                  role="status"
+                >
+                  <div>
+                    <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-button">
+                      <Heart
+                        className="size-5 fill-current"
+                        aria-hidden="true"
+                      />
+                    </span>
+                    <p className="mt-3 text-sm text-text-secondary">
+                      Loading your shared space…
+                    </p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="flex min-h-[70dvh] items-center justify-center">
+                  <div className="w-full rounded-card bg-card p-5 text-center shadow-soft">
+                    <h1 className="page-title-outlined text-xl font-semibold">
+                      We couldn’t load your data
+                    </h1>
+                    <p
+                      className="mt-2 text-sm leading-6 text-text-secondary"
+                      role="alert"
+                    >
+                      {error}
+                    </p>
+                    <Button
+                      className="mt-5"
+                      onClick={() => {
+                        void Promise.all([
+                          couple.retry(),
+                          memories.retry(),
+                          letters.retry(),
+                        ])
+                      }}
+                    >
+                      Try again
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Outlet />
+              )}
             </motion.div>
           </AnimatePresence>
         </main>

@@ -2,7 +2,6 @@ import { Send } from 'lucide-react'
 import { type FormEvent, useId, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/Button'
-import { getPartner } from '@/features/letters/data/demoLetters'
 import type {
   LetterDraftInput,
   LoveLetter,
@@ -15,6 +14,7 @@ interface ComposeLetterDialogProps {
   letter?: LoveLetter
   senderId: PartnerId
   recipientId: PartnerId
+  recipientName: string
   onClose: () => void
   onSaveDraft: (input: LetterDraftInput) => void
   onSend: (input: LetterDraftInput) => void
@@ -26,13 +26,14 @@ interface FormErrors {
 }
 
 const fieldStyles =
-  'w-full rounded-control border border-border-strong bg-background px-3.5 text-base text-text-primary placeholder:text-text-muted focus:border-primary'
+  'w-full rounded-control border border-border-strong bg-card px-3.5 text-base text-text-primary placeholder:text-text-muted'
 
 export function ComposeLetterDialog({
   open,
   letter,
   senderId,
   recipientId,
+  recipientName,
   onClose,
   onSaveDraft,
   onSend,
@@ -42,7 +43,6 @@ export function ComposeLetterDialog({
   const [body, setBody] = useState(letter?.body ?? '')
   const [errors, setErrors] = useState<FormErrors>({})
   const submittedRef = useRef(false)
-  const recipient = getPartner(recipientId)
   const dirty = title !== (letter?.title ?? '') || body !== (letter?.body ?? '')
 
   const requestClose = () => {
@@ -89,7 +89,7 @@ export function ComposeLetterDialog({
     <MemoryDialog
       open={open}
       title={letter ? 'Edit draft' : 'Write a love letter'}
-      description={`A private note for ${recipient?.name ?? 'your partner'}.`}
+      description={`A private note for ${recipientName}.`}
       onClose={requestClose}
       size="detail"
     >
@@ -108,7 +108,7 @@ export function ComposeLetterDialog({
             </label>
             <input
               id={`${formId}-recipient`}
-              value={recipient?.name ?? 'Partner'}
+              value={recipientName}
               readOnly
               className={`${fieldStyles} min-h-11 bg-surface text-text-secondary`}
             />
@@ -193,7 +193,7 @@ export function ComposeLetterDialog({
           </div>
         </div>
 
-        <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-border bg-background px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-border bg-card px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variant="ghost" onClick={requestClose}>
             Cancel
           </Button>

@@ -1,8 +1,7 @@
-import { ImagePlus, X } from 'lucide-react'
-import { type ChangeEvent, type FormEvent, useId, useState } from 'react'
+import { ImagePlus, Trash2 } from 'lucide-react'
+import { type FormEvent, useId, useState } from 'react'
 
 import { Button } from '@/components/ui/Button'
-import { IconButton } from '@/components/ui/IconButton'
 import {
   milestoneTypes,
   type MemoryDraft,
@@ -13,13 +12,14 @@ import {
 interface MemoryFormProps {
   memory?: TimelineMemory
   onCancel: () => void
-  onSave: (draft: MemoryDraft) => void
+  onSave: (draft: MemoryDraft) => void | Promise<void>
+  uploading?: boolean
+  uploadProgress?: number
 }
 
 interface FormErrors {
   title?: string
   date?: string
-  photo?: string
 }
 
 const milestoneLabels: Record<MilestoneType, string> = {
@@ -33,9 +33,15 @@ const milestoneLabels: Record<MilestoneType, string> = {
 }
 
 const inputStyles =
-  'min-h-11 w-full rounded-control border border-border-strong bg-background px-3.5 text-base text-text-primary placeholder:text-text-muted focus:border-primary'
+  'min-h-11 w-full rounded-control border border-border-strong bg-card px-3.5 text-base text-text-primary placeholder:text-text-muted'
 
-export function MemoryForm({ memory, onCancel, onSave }: MemoryFormProps) {
+export function MemoryForm({
+  memory,
+  onCancel,
+  onSave,
+  uploading = false,
+  uploadProgress = 0,
+}: MemoryFormProps) {
   const formId = useId()
   const [title, setTitle] = useState(memory?.title ?? '')
   const [date, setDate] = useState(memory?.date ?? '')
@@ -43,48 +49,10 @@ export function MemoryForm({ memory, onCancel, onSave }: MemoryFormProps) {
     memory?.milestoneType ?? 'special_memory',
   )
   const [description, setDescription] = useState(memory?.description ?? '')
-  const [photo, setPhoto] = useState(memory?.photo)
   const [errors, setErrors] = useState<FormErrors>({})
-
-  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setErrors((current) => ({
-        ...current,
-        photo: 'Choose a valid image file.',
-      }))
-      return
-    }
-
-    if (file.size > 8 * 1024 * 1024) {
-      setErrors((current) => ({
-        ...current,
-        photo: 'Choose an image smaller than 8 MB.',
-      }))
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') return
-      setPhoto({
-        src: reader.result,
-        alt: title.trim()
-          ? `Photo for ${title.trim()}`
-          : 'Selected memory photo',
-      })
-      setErrors((current) => ({ ...current, photo: undefined }))
-    }
-    reader.onerror = () => {
-      setErrors((current) => ({
-        ...current,
-        photo: 'The image could not be read.',
-      }))
-    }
-    reader.readAsDataURL(file)
-  }
+  const [mediaFile, setMediaFile] = useState<File>()
+  const [removeMedia, setRemoveMedia] = useState(false)
+  const [mediaError, setMediaError] = useState('')
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -96,17 +64,13 @@ export function MemoryForm({ memory, onCancel, onSave }: MemoryFormProps) {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    onSave({
+    void onSave({
       title: title.trim(),
       date,
       milestoneType,
       description: description.trim(),
-      photo: photo
-        ? {
-            ...photo,
-            alt: title.trim() ? `Photo for ${title.trim()}` : photo.alt,
-          }
-        : undefined,
+      mediaFile,
+      removeMedia,
     })
   }
 
@@ -229,56 +193,100 @@ export function MemoryForm({ memory, onCancel, onSave }: MemoryFormProps) {
         </div>
 
         <div>
-          <span className="mb-1.5 block text-sm font-medium text-text-primary">
-            Photo{' '}
+          <label
+            htmlFor={`${formId}-media`}
+            className="mb-1.5 block text-sm font-medium text-text-primary"
+          >
+            Photo or video{' '}
             <span className="font-normal text-text-muted">(optional)</span>
-          </span>
-          {photo ? (
-            <div className="relative overflow-hidden rounded-card border border-border bg-surface">
-              <img
-                src={photo.src}
-                alt={photo.alt}
-                className="aspect-[16/10] w-full object-cover"
-              />
-              <IconButton
-                label="Remove selected photo"
-                onClick={() => setPhoto(undefined)}
-                className="absolute top-2 right-2 bg-black/55 text-white hover:bg-black/70 hover:text-white"
-              >
-                <X aria-hidden="true" className="size-5" />
-              </IconButton>
+          </label>
+          <label className="flex min-h-20 cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-4 hover:border-border-strong">
+            <ImagePlus aria-hidden="true" className="size-5 text-primary" />
+            <span className="min-w-0 text-sm text-text-secondary">
+              {mediaFile?.name ??
+                (memory?.media.length && !removeMedia
+                  ? 'Replace current media'
+                  : 'Choose a photo or video')}
+            </span>
+            <input
+              id={`${formId}-media`}
+              type="file"
+              className="sr-only"
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+              disabled={uploading}
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                setMediaError('')
+                if (!file) return
+                const allowed = [
+                  'image/jpeg',
+                  'image/png',
+                  'image/webp',
+                  'image/gif',
+                  'video/mp4',
+                  'video/webm',
+                ].includes(file.type)
+                if (
+                  !allowed ||
+                  file.size > 25 * 1024 * 1024 ||
+                  file.size === 0
+                ) {
+                  setMediaError(
+                    'Choose a supported photo or video smaller than 25 MB.',
+                  )
+                  event.target.value = ''
+                  return
+                }
+                setMediaFile(file)
+                setRemoveMedia(false)
+              }}
+            />
+          </label>
+          {memory?.media.length && !removeMedia ? (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => {
+                setMediaFile(undefined)
+                setRemoveMedia(true)
+              }}
+              className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+            >
+              <Trash2 className="size-4" />
+              Remove current media
+            </button>
+          ) : null}
+          {mediaError ? (
+            <p role="alert" className="mt-1 text-xs text-primary">
+              {mediaError}
+            </p>
+          ) : null}
+          {uploading ? (
+            <div className="mt-3" aria-live="polite">
+              <div className="h-2 overflow-hidden rounded-full bg-primary-soft">
+                <div
+                  className="h-full bg-primary transition-[width]"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-text-secondary">
+                Uploading securely… {uploadProgress}%
+              </p>
             </div>
-          ) : (
-            <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-card border border-dashed border-border-strong bg-surface px-4 text-center transition-colors hover:border-primary/50 hover:bg-primary-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary">
-              <ImagePlus
-                aria-hidden="true"
-                className="mb-2 size-5 text-primary"
-              />
-              <span className="text-sm font-medium text-text-primary">
-                Choose a photo
-              </span>
-              <span className="mt-0.5 text-xs text-text-secondary">
-                Image up to 8 MB
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="sr-only"
-              />
-            </label>
-          )}
-          {errors.photo ? (
-            <p className="mt-1.5 text-xs text-primary">{errors.photo}</p>
           ) : null}
         </div>
       </div>
 
-      <div className="flex shrink-0 gap-3 border-t border-border bg-background px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <Button variant="secondary" fullWidth onClick={onCancel}>
+      <div className="flex shrink-0 gap-3 border-t border-border bg-card px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={onCancel}
+          disabled={uploading}
+        >
           Cancel
         </Button>
-        <Button type="submit" fullWidth>
+        <Button type="submit" fullWidth disabled={uploading}>
           {memory ? 'Save changes' : 'Add memory'}
         </Button>
       </div>

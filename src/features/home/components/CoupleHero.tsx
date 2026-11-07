@@ -15,12 +15,16 @@ const startDateFormatter = new Intl.DateTimeFormat(undefined, {
 })
 
 export function CoupleHero({ couple }: CoupleHeroProps) {
-  const formattedStartDate = startDateFormatter.format(
-    new Date(`${couple.relationshipStartDate}T00:00:00.000Z`),
-  )
+  const startDate = couple.relationshipStartDate
+    ? new Date(`${couple.relationshipStartDate}T00:00:00.000Z`)
+    : null
+  const formattedStartDate =
+    startDate && !Number.isNaN(startDate.getTime())
+      ? startDateFormatter.format(startDate)
+      : null
 
   return (
-    <Card className="overflow-hidden border-primary/10 bg-primary-soft/55 p-0">
+    <Card className="overflow-hidden border-border bg-primary-soft/55 p-0">
       <div className="flex flex-col items-center px-5 py-6 text-center">
         <div
           className="flex -space-x-3"
@@ -31,10 +35,10 @@ export function CoupleHero({ couple }: CoupleHeroProps) {
               key={partner.name}
               aria-hidden="true"
               className={[
-                'flex size-16 items-center justify-center rounded-full border-[3px] border-white text-lg font-semibold shadow-soft',
+                'flex size-16 items-center justify-center rounded-full border-[3px] border-border text-lg font-semibold shadow-soft',
                 index === 0
-                  ? 'bg-rose-200 text-rose-800'
-                  : 'bg-orange-100 text-orange-800',
+                  ? 'bg-primary-soft text-primary-strong'
+                  : 'bg-surface text-text-secondary',
               ].join(' ')}
             >
               {partner.photo ? (
@@ -55,11 +59,17 @@ export function CoupleHero({ couple }: CoupleHeroProps) {
         </h2>
         <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
           <CalendarDays aria-hidden="true" className="size-3.5 text-primary" />
-          <span>Together since {formattedStartDate}</span>
+          <span>
+            {formattedStartDate
+              ? `Together since ${formattedStartDate}`
+              : 'Add your relationship start date'}
+          </span>
         </div>
-        <p className="mt-4 max-w-[19rem] text-sm leading-6 text-text-secondary">
-          {couple.description}
-        </p>
+        {couple.description ? (
+          <p className="mt-4 max-w-[19rem] text-sm leading-6 text-text-secondary">
+            {couple.description}
+          </p>
+        ) : null}
       </div>
     </Card>
   )

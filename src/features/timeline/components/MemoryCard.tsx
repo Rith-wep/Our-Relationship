@@ -35,22 +35,32 @@ export function MemoryCard({
       padding="none"
       className={
         isFeatured
-          ? 'border-primary/20 shadow-[0_8px_28px_rgb(244_63_94/0.10)]'
-          : ''
+          ? 'border-border-strong shadow-[0_10px_30px_rgb(31_41_55/0.16)]'
+          : 'shadow-[0_10px_30px_rgb(31_41_55/0.14)]'
       }
     >
-      {memory.photo ? (
+      {memory.media[0] ? (
         <button
           type="button"
           onClick={() => onViewPhoto(memory)}
-          aria-label={`Open photo for ${memory.title}`}
+          aria-label={`Open media for ${memory.title}`}
           className="block w-full overflow-hidden rounded-t-[calc(var(--radius-card)-1px)] bg-surface"
         >
-          <img
-            src={memory.photo.src}
-            alt={memory.photo.alt}
-            className="aspect-[16/10] w-full object-cover transition-transform duration-200 hover:scale-[1.01] motion-reduce:transition-none"
-          />
+          {memory.media[0].mediaType === 'video' ? (
+            <video
+              src={memory.media[0].src}
+              muted
+              playsInline
+              preload="metadata"
+              className="aspect-[16/10] w-full object-cover"
+            />
+          ) : (
+            <img
+              src={memory.media[0].src}
+              alt={memory.media[0].alt}
+              className="aspect-[16/10] w-full object-cover transition-transform duration-200 hover:scale-[1.01] motion-reduce:transition-none"
+            />
+          )}
         </button>
       ) : null}
 

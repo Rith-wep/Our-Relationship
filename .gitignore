@@ -14,3 +14,7 @@ dist/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Supabase CLI-generated local state and secrets
+supabase/.temp/
+supabase/.branches/

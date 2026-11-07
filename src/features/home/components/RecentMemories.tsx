@@ -22,17 +22,12 @@ export function RecentMemories({ memories }: RecentMemoriesProps) {
   return (
     <section aria-labelledby="recent-memories-title">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2
-            id="recent-memories-title"
-            className="text-lg font-semibold text-text-primary"
-          >
-            Recent memories
-          </h2>
-          <p className="mt-0.5 text-xs text-text-secondary">
-            A few moments from the demo timeline.
-          </p>
-        </div>
+        <h2
+          id="recent-memories-title"
+          className="text-lg font-semibold text-text-primary"
+        >
+          Recent memories
+        </h2>
         <Link
           to="/timeline"
           className="flex min-h-11 shrink-0 items-center gap-1 rounded-control px-2 text-sm font-semibold text-primary hover:text-primary-strong"
@@ -53,7 +48,7 @@ export function RecentMemories({ memories }: RecentMemoriesProps) {
             key={memory.id}
             to="/timeline"
             aria-label={`View ${memory.title} in Timeline`}
-            className="flex min-h-24 overflow-hidden rounded-card border border-border bg-background shadow-soft transition-colors hover:border-border-strong motion-reduce:transition-none"
+            className="flex min-h-24 overflow-hidden rounded-card border border-border bg-card shadow-soft transition-colors hover:border-border-strong motion-reduce:transition-none"
           >
             {memory.photo ? (
               <img

@@ -1,33 +1,23 @@
 import { CalendarDays, Info, LockKeyhole, Pencil } from 'lucide-react'
 
-export function CoupleSettings({
-  startDate,
-  onEdit,
-}: {
-  startDate: string
-  onEdit: () => void
-}) {
+export function CoupleSettings({ onEdit }: { onEdit: () => void }) {
   const items = [
     {
       label: 'Edit Couple Profile',
-      detail: 'Names, photos, and description',
       icon: Pencil,
       action: onEdit,
     },
     {
       label: 'Relationship Start Date',
-      detail: startDate,
       icon: CalendarDays,
       action: onEdit,
     },
     {
       label: 'App Information',
-      detail: 'Our Little Universe · Local preview',
       icon: Info,
     },
     {
       label: 'Privacy Information',
-      detail: 'Session-only demo data; Supabase privacy controls planned',
       icon: LockKeyhole,
     },
   ]
@@ -37,15 +27,14 @@ export function CoupleSettings({
         Settings
       </h2>
       <div className="mt-3 overflow-hidden rounded-card border border-border bg-white shadow-soft">
-        {items.map(({ label, detail, icon: Icon, action }) => {
+        {items.map(({ label, icon: Icon, action }) => {
           const content = (
             <>
-              <Icon className="size-5 shrink-0 text-primary" />
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
+                <Icon className="size-5" />
+              </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">{label}</span>
-                <span className="mt-0.5 block text-xs leading-5 text-text-secondary">
-                  {detail}
-                </span>
               </span>
             </>
           )
@@ -67,10 +56,6 @@ export function CoupleSettings({
           )
         })}
       </div>
-      <p className="mt-3 text-xs leading-5 text-text-muted">
-        Authentication, notifications, account management, and cloud privacy
-        controls are planned features.
-      </p>
     </section>
   )
 }

@@ -15,12 +15,21 @@ export interface MemoryPhoto {
   alt: string
 }
 
+export interface MemoryMedia extends MemoryPhoto {
+  id: string
+  objectPath: string
+  mediaType: 'image' | 'video'
+  mimeType: string
+  sizeBytes: number
+}
+
 export interface TimelineMemory {
   id: string
   title: string
   description: string
   date: string
   photo?: MemoryPhoto
+  media: MemoryMedia[]
   milestoneType: MilestoneType
   createdBy: string
   createdAt: string
@@ -34,6 +43,7 @@ export interface MemoryDraft {
   title: string
   description: string
   date: string
-  photo?: MemoryPhoto
+  mediaFile?: File
+  removeMedia?: boolean
   milestoneType: MilestoneType
 }

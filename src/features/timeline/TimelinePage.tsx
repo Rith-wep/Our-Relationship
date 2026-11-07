@@ -11,8 +11,14 @@ import { TimelineList } from '@/features/timeline/components/TimelineList'
 import type { MemoryDraft, TimelineMemory } from '@/features/timeline/types'
 
 export function TimelinePage() {
-  const { activeMemories, createMemory, updateMemory, deleteMemory } =
-    useMemories()
+  const {
+    activeMemories,
+    createMemory,
+    updateMemory,
+    deleteMemory,
+    uploading,
+    uploadProgress,
+  } = useMemories()
   const [formMemory, setFormMemory] = useState<
     TimelineMemory | null | undefined
   >()
@@ -33,19 +39,18 @@ export function TimelinePage() {
   const closeDeleteDialog = useCallback(() => setMemoryToDelete(null), [])
   const closePhoto = useCallback(() => setPhotoMemory(null), [])
 
-  const handleSave = (draft: MemoryDraft) => {
+  const handleSave = async (draft: MemoryDraft) => {
     if (formMemory) {
-      updateMemory(formMemory.id, draft)
+      await updateMemory(formMemory.id, draft)
     } else {
-      createMemory(draft)
+      await createMemory(draft)
     }
-
     closeForm()
   }
 
   const handleConfirmDelete = () => {
     if (!memoryToDelete) return
-    deleteMemory(memoryToDelete.id)
+    void deleteMemory(memoryToDelete.id)
     closeDeleteDialog()
   }
 
@@ -55,9 +60,6 @@ export function TimelinePage() {
         title="Our Story"
         description="Every moment brought us closer."
       />
-      <p className="mt-3 text-xs leading-5 text-text-muted">
-        Demo memories are stored only in this browser session.
-      </p>
 
       <TimelineList
         memories={sortedMemories}
@@ -71,7 +73,7 @@ export function TimelinePage() {
         type="button"
         onClick={() => setFormMemory(null)}
         aria-label="Add memory"
-        className="timeline-fab fixed z-30 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_8px_24px_rgb(244_63_94/0.32)] transition-colors hover:bg-primary-strong active:bg-primary-strong motion-reduce:transition-none"
+        className="timeline-fab fixed z-30 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_8px_24px_rgb(201_47_125/0.28)] transition-colors hover:bg-primary-strong active:bg-primary-strong motion-reduce:transition-none"
       >
         <Plus aria-hidden="true" className="size-6" strokeWidth={2.5} />
       </button>
@@ -91,13 +93,15 @@ export function TimelinePage() {
           memory={formMemory ?? undefined}
           onCancel={closeForm}
           onSave={handleSave}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
         />
       </MemoryDialog>
 
       <MemoryDialog
         open={Boolean(memoryToDelete)}
         title="Move to Recently Deleted?"
-        description="You can restore this memory from the Memories screen during the current session."
+        description="You can restore this memory from the Memories screen."
         onClose={closeDeleteDialog}
         size="compact"
       >

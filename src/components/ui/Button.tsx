@@ -15,9 +15,10 @@ interface ButtonProps extends Omit<
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-white shadow-button hover:bg-primary-strong',
+  primary:
+    'border border-border bg-primary text-white shadow-button hover:bg-primary-strong',
   secondary:
-    'border border-border-strong bg-background text-text-primary hover:bg-surface',
+    'border border-border-strong bg-card text-text-primary hover:bg-surface',
   ghost:
     'bg-transparent text-text-secondary hover:bg-surface hover:text-text-primary',
 }

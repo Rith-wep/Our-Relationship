@@ -16,23 +16,27 @@ import type {
   SpecialDateDraft,
 } from '@/features/couple/types'
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
+import { useAuth } from '@/features/auth/useAuth'
+import { InvitePartnerCard } from '@/features/onboarding/InvitePartnerCard'
 
 export function CouplePage() {
   const couple = useCouple()
+  const auth = useAuth()
   const [editProfile, setEditProfile] = useState(false)
   const [dreamForm, setDreamForm] = useState<Dream | null | undefined>()
   const [dreamToDelete, setDreamToDelete] = useState<Dream | null>(null)
   const [dateForm, setDateForm] = useState<ImportantDate | null | undefined>()
   const [dateToDelete, setDateToDelete] = useState<ImportantDate | null>(null)
+  const [signOutError, setSignOutError] = useState<string | null>(null)
 
   const saveDream = (draft: DreamDraft) => {
-    if (dreamForm) couple.updateDream(dreamForm.id, draft)
-    else couple.createDream(draft)
+    if (dreamForm) void couple.updateDream(dreamForm.id, draft)
+    else void couple.createDream(draft)
     setDreamForm(undefined)
   }
   const saveDate = (draft: SpecialDateDraft) => {
-    if (dateForm) couple.updateSpecialDate(dateForm.id, draft)
-    else couple.createSpecialDate(draft)
+    if (dateForm) void couple.updateSpecialDate(dateForm.id, draft)
+    else void couple.createSpecialDate(draft)
     setDateForm(undefined)
   }
 
@@ -42,7 +46,9 @@ export function CouplePage() {
         <p className="text-xs font-semibold tracking-wide text-primary uppercase">
           Our shared space
         </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-[-0.02em]">Us</h1>
+        <h1 className="page-title-outlined mt-1 text-2xl font-semibold tracking-[-0.02em]">
+          Us
+        </h1>
         <p className="mt-1 text-sm text-text-secondary">
           Our story, our plans, and the days we keep close.
         </p>
@@ -55,7 +61,7 @@ export function CouplePage() {
         dreams={couple.dreams}
         onAdd={() => setDreamForm(null)}
         onEdit={setDreamForm}
-        onToggle={couple.toggleDream}
+        onToggle={(id) => void couple.toggleDream(id)}
         onDelete={setDreamToDelete}
       />
       <ImportantDates
@@ -64,14 +70,30 @@ export function CouplePage() {
         onEdit={setDateForm}
         onDelete={setDateToDelete}
       />
-      <CoupleSettings
-        startDate={couple.profile.relationshipStartDate}
-        onEdit={() => setEditProfile(true)}
-      />
-      <p className="text-center text-[11px] leading-4 text-text-muted">
-        Profile, dreams, and dates are stored only for this session and reset on
-        refresh.
-      </p>
+      <CoupleSettings onEdit={() => setEditProfile(true)} />
+      <InvitePartnerCard />
+      <div>
+        {signOutError ? (
+          <p
+            className="mb-3 text-center text-sm text-primary-strong"
+            role="alert"
+          >
+            {signOutError}
+          </p>
+        ) : null}
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={() => {
+            setSignOutError(null)
+            void auth.signOut().then((result) => {
+              if (result.error) setSignOutError(result.error)
+            })
+          }}
+        >
+          Sign out
+        </Button>
+      </div>
 
       <MemoryDialog
         open={editProfile}
@@ -81,9 +103,14 @@ export function CouplePage() {
       >
         <EditCoupleProfile
           profile={couple.profile}
+          editablePartnerId={auth.user?.id ?? ''}
+          uploading={couple.uploadingPhoto}
+          uploadProgress={couple.photoUploadProgress}
+          onUploadPhoto={(file) => void couple.uploadProfilePhoto(file)}
+          onRemovePhoto={() => void couple.removeProfilePhoto()}
           onCancel={() => setEditProfile(false)}
           onSave={(profile) => {
-            couple.updateProfile(profile)
+            void couple.updateProfile(profile)
             setEditProfile(false)
           }}
         />
@@ -115,7 +142,7 @@ export function CouplePage() {
       <MemoryDialog
         open={Boolean(dreamToDelete)}
         title="Delete this dream?"
-        description="This cannot be undone during the current session."
+        description="This dream will be permanently removed."
         onClose={() => setDreamToDelete(null)}
         size="compact"
       >
@@ -132,7 +159,7 @@ export function CouplePage() {
             <Button
               fullWidth
               onClick={() => {
-                if (dreamToDelete) couple.deleteDream(dreamToDelete.id)
+                if (dreamToDelete) void couple.deleteDream(dreamToDelete.id)
                 setDreamToDelete(null)
               }}
             >
@@ -161,7 +188,7 @@ export function CouplePage() {
             <Button
               fullWidth
               onClick={() => {
-                if (dateToDelete) couple.deleteSpecialDate(dateToDelete.id)
+                if (dateToDelete) void couple.deleteSpecialDate(dateToDelete.id)
                 setDateToDelete(null)
               }}
             >

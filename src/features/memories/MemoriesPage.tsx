@@ -32,6 +32,8 @@ export function MemoriesPage() {
     restoreMemory,
     permanentlyDeleteMemory,
     toggleFavorite,
+    uploading,
+    uploadProgress,
   } = useMemories()
   const [filter, setFilter] = useState<MemoryFilter>('all')
   const [view, setView] = useState<'gallery' | 'deleted'>('gallery')
@@ -53,7 +55,7 @@ export function MemoriesPage() {
       second.date.localeCompare(first.date),
     )
     if (filter === 'photos')
-      return sorted.filter((memory) => Boolean(memory.photo))
+      return sorted.filter((memory) => memory.media.length > 0)
     if (filter === 'milestones') {
       return sorted.filter((memory) =>
         milestoneFilters.has(memory.milestoneType),
@@ -68,9 +70,9 @@ export function MemoriesPage() {
   const closeDelete = useCallback(() => setMemoryToDelete(null), [])
   const closeRemove = useCallback(() => setMemoryToRemove(null), [])
 
-  const handleSave = (draft: MemoryDraft) => {
-    if (formMemory) updateMemory(formMemory.id, draft)
-    else createMemory(draft)
+  const handleSave = async (draft: MemoryDraft) => {
+    if (formMemory) await updateMemory(formMemory.id, draft)
+    else await createMemory(draft)
     closeForm()
   }
 
@@ -86,13 +88,13 @@ export function MemoriesPage() {
 
   const handleConfirmDelete = () => {
     if (!memoryToDelete) return
-    deleteMemory(memoryToDelete.id)
+    void deleteMemory(memoryToDelete.id)
     closeDelete()
   }
 
   const handleConfirmRemove = () => {
     if (!memoryToRemove) return
-    permanentlyDeleteMemory(memoryToRemove.id)
+    void permanentlyDeleteMemory(memoryToRemove.id)
     closeRemove()
   }
 
@@ -108,9 +110,6 @@ export function MemoriesPage() {
           </Button>
         }
       />
-      <p className="mt-3 text-xs leading-5 text-text-muted">
-        Shared in this session only. Everything resets when the page refreshes.
-      </p>
 
       <div
         className="mt-6 flex border-b border-border"
@@ -127,7 +126,7 @@ export function MemoriesPage() {
             className={[
               'min-h-11 border-b-2 px-3 text-sm font-semibold transition-colors motion-reduce:transition-none',
               view === item
-                ? 'border-primary text-primary'
+                ? 'border-border-strong text-primary'
                 : 'border-transparent text-text-secondary hover:text-text-primary',
             ].join(' ')}
           >
@@ -161,7 +160,7 @@ export function MemoriesPage() {
                 }
                 description={
                   activeMemories.length === 0
-                    ? 'Add the first photo or moment to your shared gallery.'
+                    ? 'Add the first moment to your shared gallery.'
                     : 'Try another filter or add a new memory.'
                 }
                 icon={<Images aria-hidden="true" className="size-5" />}
@@ -180,7 +179,7 @@ export function MemoriesPage() {
         <div className="mt-5">
           <RecentlyDeleted
             memories={deletedMemories}
-            onRestore={restoreMemory}
+            onRestore={(id) => void restoreMemory(id)}
             onPermanentlyDelete={setMemoryToRemove}
           />
         </div>
@@ -191,7 +190,7 @@ export function MemoriesPage() {
         onClose={() => setSelectedId(null)}
         onEdit={handleEdit}
         onDelete={handleDeleteRequest}
-        onToggleFavorite={toggleFavorite}
+        onToggleFavorite={(id) => void toggleFavorite(id)}
       />
 
       <MemoryDialog
@@ -209,13 +208,15 @@ export function MemoriesPage() {
           memory={formMemory ?? undefined}
           onCancel={closeForm}
           onSave={handleSave}
+          uploading={uploading}
+          uploadProgress={uploadProgress}
         />
       </MemoryDialog>
 
       <MemoryDialog
         open={Boolean(memoryToDelete)}
         title="Move to Recently Deleted?"
-        description="You can restore this memory later during the current session."
+        description="You can restore this memory from Recently Deleted."
         onClose={closeDelete}
         size="compact"
       >
@@ -246,7 +247,7 @@ export function MemoriesPage() {
         <div className="p-5">
           <p className="text-sm leading-6 text-text-secondary">
             {memoryToRemove
-              ? `Permanently remove “${memoryToRemove.title}” from this session?`
+              ? `Permanently remove “${memoryToRemove.title}”?`
               : null}
           </p>
           <div className="mt-5 flex gap-3">

@@ -25,6 +25,31 @@ const TimelinePage = lazy(() =>
     default: module.TimelinePage,
   })),
 )
+const LoginPage = lazy(() =>
+  import('@/features/auth/LoginPage').then((module) => ({
+    default: module.LoginPage,
+  })),
+)
+const RegisterPage = lazy(() =>
+  import('@/features/auth/RegisterPage').then((module) => ({
+    default: module.RegisterPage,
+  })),
+)
+const ForgotPasswordPage = lazy(() =>
+  import('@/features/auth/ForgotPasswordPage').then((module) => ({
+    default: module.ForgotPasswordPage,
+  })),
+)
+const ResetPasswordPage = lazy(() =>
+  import('@/features/auth/ResetPasswordPage').then((module) => ({
+    default: module.ResetPasswordPage,
+  })),
+)
+const OnboardingPage = lazy(() =>
+  import('@/features/onboarding/OnboardingPage').then((module) => ({
+    default: module.OnboardingPage,
+  })),
+)
 
 function RouteSuspense({ children }: { children: ReactNode }) {
   return (
@@ -79,6 +104,46 @@ export function CoupleRoute() {
   return (
     <RouteSuspense>
       <CouplePage />
+    </RouteSuspense>
+  )
+}
+
+export function LoginRoute() {
+  return (
+    <RouteSuspense>
+      <LoginPage />
+    </RouteSuspense>
+  )
+}
+
+export function RegisterRoute() {
+  return (
+    <RouteSuspense>
+      <RegisterPage />
+    </RouteSuspense>
+  )
+}
+
+export function ForgotPasswordRoute() {
+  return (
+    <RouteSuspense>
+      <ForgotPasswordPage />
+    </RouteSuspense>
+  )
+}
+
+export function ResetPasswordRoute() {
+  return (
+    <RouteSuspense>
+      <ResetPasswordPage />
+    </RouteSuspense>
+  )
+}
+
+export function OnboardingRoute() {
+  return (
+    <RouteSuspense>
+      <OnboardingPage />
     </RouteSuspense>
   )
 }

@@ -59,13 +59,13 @@ export function TimelineItem({
   const Icon = milestoneIcons[memory.milestoneType]
 
   return (
-    <li className="relative grid grid-cols-[2rem_minmax(0,1fr)] gap-3 pb-8 last:pb-2">
-      <div className="relative z-10 flex size-8 items-center justify-center rounded-full border-[3px] border-primary-soft bg-primary text-white shadow-[0_0_0_4px_white]">
+    <li className="relative grid grid-cols-[2rem_minmax(0,1fr)] gap-3.5 pb-9 last:pb-2">
+      <div className="relative z-10 flex size-8 items-center justify-center rounded-full border-[3px] border-border bg-primary text-white shadow-[0_0_0_3px_rgb(31_41_55/0.16)]">
         <Icon aria-hidden="true" className="size-3.5" strokeWidth={2.4} />
       </div>
 
       <div className="min-w-0 pt-0.5">
-        <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="mb-3 flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 rounded-full bg-card px-3 py-1 shadow-sm">
           <time
             dateTime={memory.date}
             className="text-xs font-semibold tracking-wide text-primary uppercase"

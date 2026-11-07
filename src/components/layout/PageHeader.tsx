@@ -6,18 +6,13 @@ interface PageHeaderProps {
   action?: ReactNode
 }
 
-export function PageHeader({ title, description, action }: PageHeaderProps) {
+export function PageHeader({ title, action }: PageHeaderProps) {
   return (
-    <header className="flex items-start justify-between gap-4">
+    <header className="flex items-center justify-between gap-4 py-2">
       <div className="min-w-0">
-        <h1 className="text-2xl leading-8 font-semibold tracking-[-0.02em] text-text-primary">
+        <h1 className="page-title-outlined text-2xl leading-8 font-semibold tracking-[-0.02em]">
           {title}
         </h1>
-        {description ? (
-          <p className="mt-1.5 max-w-prose text-sm leading-5 text-text-secondary">
-            {description}
-          </p>
-        ) : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </header>

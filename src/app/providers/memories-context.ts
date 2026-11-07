@@ -6,12 +6,17 @@ export interface MemoriesContextValue {
   memories: TimelineMemory[]
   activeMemories: TimelineMemory[]
   deletedMemories: TimelineMemory[]
-  createMemory: (draft: MemoryDraft) => TimelineMemory
-  updateMemory: (id: string, draft: MemoryDraft) => void
-  deleteMemory: (id: string) => void
-  restoreMemory: (id: string) => void
-  permanentlyDeleteMemory: (id: string) => void
-  toggleFavorite: (id: string) => void
+  loading: boolean
+  error: string | null
+  uploading: boolean
+  uploadProgress: number
+  retry: () => Promise<void>
+  createMemory: (draft: MemoryDraft) => Promise<void>
+  updateMemory: (id: string, draft: MemoryDraft) => Promise<void>
+  deleteMemory: (id: string) => Promise<void>
+  restoreMemory: (id: string) => Promise<void>
+  permanentlyDeleteMemory: (id: string) => Promise<void>
+  toggleFavorite: (id: string) => Promise<void>
 }
 
 export const MemoriesContext = createContext<MemoriesContextValue | null>(null)

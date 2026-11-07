@@ -1,8 +1,9 @@
 export interface CouplePartner {
-  id: 'partner-a' | 'partner-b'
+  id: string
   name: string
   initial: string
   photo?: string
+  photoPath?: string
 }
 
 export interface CoupleProfile {

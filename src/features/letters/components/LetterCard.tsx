@@ -1,6 +1,5 @@
 import { FilePenLine, Heart } from 'lucide-react'
 
-import { getPartner } from '@/features/letters/data/demoLetters'
 import type { LetterBox } from '@/features/letters/view-types'
 import type { LoveLetter } from '@/features/letters/types'
 
@@ -22,8 +21,6 @@ function previewBody(body: string) {
 }
 
 export function LetterCard({ letter, box, onOpen }: LetterCardProps) {
-  const sender = getPartner(letter.senderId)
-  const recipient = getPartner(letter.recipientId)
   const unread = box === 'inbox' && !letter.readAt
   const displayDate = letter.sentAt ?? letter.updatedAt
 
@@ -32,23 +29,18 @@ export function LetterCard({ letter, box, onOpen }: LetterCardProps) {
       type="button"
       onClick={() => onOpen(letter)}
       className={[
-        'w-full rounded-card border bg-background p-4 text-left shadow-soft transition-colors motion-reduce:transition-none',
+        'w-full rounded-card border bg-card p-4 text-left shadow-soft transition-colors motion-reduce:transition-none',
         unread
-          ? 'border-primary/25'
+          ? 'border-border-strong'
           : 'border-border hover:border-border-strong',
       ].join(' ')}
     >
       <div className="flex items-start gap-3">
-        <div
-          className={[
-            'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
-            unread ? 'bg-primary text-white' : 'bg-primary-soft text-primary',
-          ].join(' ')}
-        >
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white shadow-button">
           {box === 'drafts' ? (
             <FilePenLine aria-hidden="true" className="size-[18px]" />
           ) : (
-            sender?.initial
+            letter.senderName.charAt(0).toUpperCase()
           )}
         </div>
         <div className="min-w-0 flex-1">
@@ -57,8 +49,8 @@ export function LetterCard({ letter, box, onOpen }: LetterCardProps) {
               className={`truncate text-xs ${unread ? 'font-semibold text-primary' : 'text-text-secondary'}`}
             >
               {box === 'inbox'
-                ? `From ${sender?.name ?? 'Partner'}`
-                : `To ${recipient?.name ?? 'Partner'}`}
+                ? `From ${letter.senderName}`
+                : `To ${letter.recipientName}`}
             </p>
             <div className="flex shrink-0 items-center gap-1.5">
               {letter.favorite ? (

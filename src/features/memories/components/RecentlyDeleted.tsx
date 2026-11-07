@@ -20,7 +20,7 @@ export function RecentlyDeleted({
       <div className="rounded-card border border-border bg-surface">
         <EmptyState
           title="Recently Deleted is empty"
-          description="Memories you delete during this session will appear here until restored or removed permanently."
+          description="Deleted memories appear here until restored or removed permanently."
           icon={<Trash2 aria-hidden="true" className="size-5" />}
         />
       </div>
@@ -36,7 +36,7 @@ export function RecentlyDeleted({
       {memories.map((memory) => (
         <article
           key={memory.id}
-          className="flex gap-3 rounded-card border border-border bg-background p-3 shadow-soft"
+          className="flex gap-3 rounded-card border border-border bg-card p-3 shadow-soft"
         >
           {memory.photo ? (
             <img
@@ -54,9 +54,7 @@ export function RecentlyDeleted({
             <h3 className="truncate text-sm font-semibold text-text-primary">
               {memory.title}
             </h3>
-            <p className="mt-1 text-xs text-text-secondary">
-              Deleted this session
-            </p>
+            <p className="mt-1 text-xs text-text-secondary">Recently deleted</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Button
                 size="sm"

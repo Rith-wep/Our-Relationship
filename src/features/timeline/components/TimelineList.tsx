@@ -34,7 +34,7 @@ export function TimelineList({
   }
 
   return (
-    <ol className="relative mt-8 before:absolute before:top-4 before:bottom-5 before:left-[15px] before:w-px before:bg-border-strong before:content-['']">
+    <ol className="relative mt-7 before:absolute before:top-4 before:bottom-5 before:left-[15px] before:w-0.5 before:rounded-full before:bg-text-primary/25 before:content-['']">
       {memories.map((memory) => (
         <TimelineItem
           key={memory.id}

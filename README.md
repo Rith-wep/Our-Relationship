@@ -4,9 +4,9 @@
 
 ## Project status
 
-**Frontend foundation implemented; product features remain planned.**
+**Frontend, Supabase Auth, secure couple onboarding, and database-backed relationship features are implemented.**
 
-The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space frontends, shared in-memory state, reusable design-system components, strict static analysis, and formatting tools. Supabase integration, authentication, database schema, PWA behavior, and deployment are **planned functionality**, not completed features.
+The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, and private memory media. Profile-photo Storage support is implemented locally and awaits approval for its hosted migration. Realtime subscriptions, PWA behavior, and deployment remain planned.
 
 ### Implemented now
 
@@ -18,23 +18,31 @@ The repository contains a working React, Vite, and TypeScript application with T
 - Accessible five-item navigation using Lucide icons and route-aware active states
 - Reusable `PageHeader`, `Button`, `IconButton`, `Card`, and `EmptyState` components
 - Restrained Motion page transitions and button press feedback with reduced-motion support
-- Interactive Relationship Timeline with typed memories, local demo data, add/edit/delete flows, photo preview, and accessible dialogs
+- Interactive Relationship Timeline with persistent typed memories, add/edit/delete/restore flows, and accessible dialogs
 - Premium Home frontend with a couple hero, live relationship duration, anniversary countdown, daily notes, recent memories, and quick actions
-- Shared `MemoriesProvider` synchronizing Home, Timeline, and Memories during the current session
+- Database-backed `MemoriesProvider` synchronizing Home, Timeline, and Memories
 - Interactive Memories Gallery with filters, details, favorites, soft deletion, restoration, and permanent removal
 - Interactive Love Letters with simulated partner identities, mailbox tabs, drafts, reading, favorites, and soft deletion
-- Shared `LettersProvider` with typed session-only correspondence state
-- Shared `CoupleProvider` synchronizing the couple profile between Home and Our Space
+- Database-backed `LettersProvider` with draft ownership, recipient read state, and independent mailboxes
+- Database-backed `CoupleProvider` synchronizing profiles, dreams, and important dates
 - Interactive dreams, important dates, and honest planned settings in Our Space
 - `@/` source import alias
 - ESLint, Prettier, type-check, and production-build scripts
-- Documented Supabase environment placeholders; Supabase itself is not connected
+- Documented Supabase environment placeholders; hosted application data is not connected
+- Supabase JavaScript client with publishable-key configuration and legacy anon-key fallback
+- Email/password registration, login, logout, session restoration, password recovery, and protected application routes
+- Hosted migration safety plan with a mandatory remote-inspection and approval gate
+- Hosted migration and post-deployment verification report for the confirmed production project
+- Versioned Supabase PostgreSQL schema, RLS policies, invitation workflows, private Storage policies, and locally passing pgTAP security suites
+- All four migrations applied to hosted project `jthkuepideccbiqjqeci` and structurally verified
+- Authenticated couple onboarding with profile creation, shared-space creation, email-bound seven-day invitation links, and secure invitation acceptance
+- Database-backed membership identity in Love Letters; the development Partner A/B switcher has been removed
+- Private memory photo/video uploads with validation, PostgreSQL metadata, short-lived signed URLs, progress states, replacement, and deletion cleanup
+- Private profile-photo upload/removal with owner-only writes and partner-readable signed URLs; hosted use requires migration `202611080005_profile_media_storage.sql`
 
 ### Not implemented yet
 
-- Supabase-backed account, authorization, and persistence features
-- Supabase, authentication, couple pairing, database, Storage, or Realtime
-- Media uploads, letters, memories, timeline behavior, and shared content
+- Realtime subscriptions
 - PWA manifest, service worker, offline behavior, and deployment configuration
 
 ## Product vision
@@ -90,7 +98,7 @@ The initial experience is optimized for a 390 px mobile viewport, with careful a
 | Animation      | Motion for React — restrained shell motion implemented      |
 | Routing        | React Router 8 — shell and placeholder routes implemented   |
 | Icons          | Lucide React — navigation and empty-state icons implemented |
-| Authentication | Supabase Auth                                               |
+| Authentication | Supabase Auth — client foundation implemented               |
 | Database       | Supabase PostgreSQL                                         |
 | File storage   | Supabase Storage                                            |
 | Live updates   | Supabase Realtime                                           |
@@ -196,7 +204,6 @@ src/
 │   │   │   ├── RecentMemories.tsx
 │   │   │   └── RelationshipCounter.tsx
 │   │   ├── data/
-│   │   │   ├── demoCouple.ts
 │   │   │   └── loveNotes.ts
 │   │   ├── hooks/useRelationshipDuration.ts
 │   │   └── HomePage.tsx
@@ -207,8 +214,7 @@ src/
 │   │   │   ├── LetterCard.tsx
 │   │   │   ├── LetterReader.tsx
 │   │   │   ├── LetterTabs.tsx
-│   │   │   └── PartnerSwitcher.tsx
-│   │   ├── data/demoLetters.ts
+│   │   │   └── AuthenticatedIdentity.tsx
 │   │   ├── LettersPage.tsx
 │   │   ├── types.ts
 │   │   └── view-types.ts
@@ -229,7 +235,6 @@ src/
 │       │   ├── PhotoViewer.tsx
 │       │   ├── TimelineItem.tsx
 │       │   └── TimelineList.tsx
-│       ├── data/demoMemories.ts
 │       ├── TimelinePage.tsx
 │       └── types.ts
 ├── styles/globals.css
@@ -283,15 +288,20 @@ Feature directories may contain their own `components`, `hooks`, `api`, `schemas
 
 ## Implemented routing
 
-| Path        | Current screen                |
-| ----------- | ----------------------------- |
-| `/`         | Interactive Home frontend     |
-| `/timeline` | Interactive Timeline frontend |
-| `/memories` | Interactive Memories Gallery  |
-| `/letters`  | Interactive Love Letters      |
-| `/us`       | Interactive Our Space         |
+| Path               | Current screen                          |
+| ------------------ | --------------------------------------- |
+| `/`                | Interactive Home frontend               |
+| `/timeline`        | Interactive Timeline frontend           |
+| `/memories`        | Interactive Memories Gallery            |
+| `/letters`         | Interactive Love Letters                |
+| `/us`              | Interactive Our Space                   |
+| `/login`           | Supabase email/password login           |
+| `/register`        | Supabase account registration           |
+| `/forgot-password` | Password recovery request               |
+| `/reset-password`  | Password update from a recovery session |
+| `/onboarding`      | Create or securely join a couple space  |
 
-All five primary routes now provide interactive frontend experiences backed by session-state providers. Authentication guards and persisted data will be added in their corresponding phases.
+The five application routes require both a restored Supabase Auth session and a real couple membership. Unpaired users are directed to onboarding. Relationship content is loaded from couple-scoped PostgreSQL tables through RLS-protected browser queries.
 
 ## Implemented design system
 
@@ -304,7 +314,7 @@ All five primary routes now provide interactive frontend experiences backed by s
 
 ## Shared couple state and Our Space
 
-`CoupleProvider` is mounted above routing and owns the single couple profile consumed by Home and `/us`. Updating partner names, profile images, relationship description, or relationship start date updates Home immediately, including its live duration and anniversary countdown. Profile images are validated and read as in-memory data URLs, avoiding unmanaged object URLs.
+`CoupleProvider` loads the authenticated couple, both partner profiles, dreams, and important dates from Supabase. Shared relationship date and description are editable by either partner. Each account can edit only its own display name, matching profile RLS ownership. Mutations reload canonical database state so Home and `/us` remain synchronized.
 
 The implemented Our Space frontend includes:
 
@@ -313,32 +323,33 @@ The implemented Our Space frontend includes:
 - Important relationship dates with annual recurrence, upcoming-day calculations, custom add/edit/delete flows, and safe leap-year/month-end clamping
 - A minimal settings area that links back to profile editing and honestly labels authentication, notifications, accounts, and cloud privacy as planned
 
-Couple profile, dreams, images, and dates use React state only and reset to fictional demo data on refresh. The future Supabase implementation will map this provider to couple-scoped tables, private Storage objects, authenticated memberships, RLS policies, and realtime synchronization.
+Profile photos use private Storage objects and signed URLs. Each member can replace or remove only their own photo. No base64 or fictional profile data is persisted. The profile Storage migration is locally verified but not yet applied to hosted Supabase.
 
 ## Shared frontend memory architecture
 
-`MemoriesProvider` is mounted above the router and owns the single frontend collection used by Home, Timeline, and Memories. The `useMemories` hook exposes active and deleted views plus stable create, update, soft-delete, restore, permanent-delete, and favorite-toggle operations.
+`MemoriesProvider` loads the couple-scoped PostgreSQL collection used by Home, Timeline, and Memories. The `useMemories` hook exposes active and deleted views plus create, update, soft-delete, restore, permanent-delete, and favorite-toggle operations.
 
 - Active views automatically exclude records with a `deletedAt` timestamp.
 - Soft deletion records `deletedAt`, `deletedBy`, and an updated timestamp without removing the memory.
 - Restoration clears deletion metadata; permanent removal is available only from Recently Deleted after confirmation.
 - Favorites remain a boolean property on the shared memory record rather than a separate model.
-- Uploaded images use validated in-memory data URLs, so the implementation does not allocate unmanaged object URLs.
-- Context state is intentionally not written to local storage or a backend. The complete collection resets to fictional demo data on refresh.
+- Media is stored as private Storage objects; only object paths and validated metadata are stored in PostgreSQL.
+- Signed display URLs expire after one hour and are recreated when provider data reloads.
+- Every mutation is persisted through Supabase and reloaded into the shared provider.
 - Route-level lazy loading keeps feature screens in separate production chunks.
 
-The provider API is the temporary frontend boundary that will later be replaced or backed by typed Supabase queries, RLS-protected mutations, Storage uploads, and realtime cache synchronization.
+JPEG, PNG, WebP, GIF, MP4, and WebM uploads are supported up to the private bucket's 25 MiB limit. Upload/database failures use compensating cleanup to avoid leaving newly uploaded objects unmanaged.
 
 ## Shared frontend letter architecture
 
-`LettersProvider` is mounted above the router and owns a typed, session-only collection of correspondence. The `useLetters` hook exposes draft creation and editing, draft ownership-aware deletion, sending, recipient-only read transitions, favorites, soft deletion, and restoration.
+`LettersProvider` loads the authenticated user's RLS-filtered correspondence and mailbox rows. It exposes draft creation/editing/deletion, sending, recipient-only read transitions, per-user favorites, independent soft deletion, and restoration.
 
 - Letter records include database-oriented IDs, couple/sender/recipient relationships, draft/sent status, audit timestamps, read state, favorite state, and nullable deletion metadata.
-- Provider mutations require the acting demo partner where ownership or participation matters. These checks model intended behavior but are not an authentication or security boundary.
+- Draft and read-state authorization is enforced by PostgreSQL policies and triggers, not client identity parameters.
 - Sending is restricted to the current draft owner and requires non-empty title and body values. Already-sent letters cannot be sent again.
 - Opening a received sent letter marks it read; viewing the same letter from its sender's Sent box does not.
 - Soft-deleted letters are hidden from Inbox, Sent, and Drafts and can be restored from Recently Deleted.
-- State is intentionally not stored in local storage or a backend and resets to fictional demo letters on refresh.
+- Letter content and mailbox state survive refresh and sign-out/sign-in.
 
 The eventual Supabase implementation will map these records to PostgreSQL, replace the identity simulator with authenticated membership, enforce sender/recipient access with RLS, and synchronize mutations through the shared data layer.
 
@@ -352,14 +363,14 @@ The `/letters` route provides a private correspondence experience with:
 - A mobile writing dialog with an automatic recipient, accessible labels, title/body validation, draft saving, send protection, character count, and discard confirmation
 - Draft editing limited to the simulated sender who owns the draft
 - A focused ivory reading view with comfortable serif typography, paragraph spacing, signature, favorite, delete, back, and draft-only edit actions
-- Recipient-only read-state updates and synchronized views when switching demo identities
+- Recipient-only read-state updates based on the authenticated Supabase identity
 - Friendly Inbox, Sent, Drafts, and Recently Deleted empty states
 - Soft deletion and restoration for both sent letters and drafts
 
 ### Love Letters limitations before Supabase
 
 - Partner switching is a removable developer simulation and provides no identity verification or security.
-- Letters, drafts, favorites, read timestamps, and deletions exist only in React state and reset on refresh.
+- Letters, drafts, per-user favorites, read timestamps, and mailbox deletions persist in PostgreSQL.
 - There is no delivery service, notification, scheduling, encryption layer, or cross-device synchronization.
 - Deletion affects the single shared frontend record for both simulated partners; production behavior requires an explicit retention and per-user visibility policy.
 - Browser-native confirmation is used when discarding unsaved compose changes.
@@ -377,34 +388,32 @@ The `/memories` route provides a responsive shared photo-journal experience with
 - Recently Deleted with restore and separately confirmed permanent removal
 - Empty states for the gallery, filters, Home recent memories, and Recently Deleted
 
-### Memories limitations before Supabase
+### Memories limitations
 
-- All changes exist only for the current page session and reset on refresh.
-- Uploaded images are held as in-memory data URLs and are not compressed, uploaded, or shared across devices.
-- Recently Deleted has no automatic expiry, retention window, or server-side recovery.
-- Favorites and deletion metadata are frontend fields only and have no database enforcement.
-- The current creator is a neutral local label because authentication is not implemented.
+- Upload progress is staged around the Supabase upload request; the standard SDK does not expose byte-level progress.
+- Recently Deleted has no automatic expiry or retention window yet.
+- Realtime subscriptions are not implemented; remote changes appear after reload or the next mutation refresh.
 
 ## Implemented Home frontend
 
 The `/` route now provides a responsive, mobile-first Home experience with:
 
 - A time-of-day greeting, compact app identity, and neutral placeholder couple avatars
-- A fictional couple hero with configurable names, relationship start date, and caption
+- The authenticated couple profile with real member names, relationship start date, and description
 - A live relationship counter showing total calendar days, calendar-aware years/months/days, and a non-announced seconds display
 - Safe handling for invalid and future start dates, with a one-second timer that is isolated to the counter and cleaned up on unmount
 - Monthly and yearly anniversary countdowns that clamp dates correctly at month end, including start dates on the 29th, 30th, or 31st
 - An original local collection of love notes selected deterministically by the device's local calendar date, plus a manual next-note action
-- The latest three records from the shared typed Timeline demo module, with navigation to the Timeline route
+- The latest three persisted memories, with navigation to the Timeline route
 - Compact navigation actions for adding a memory, viewing Timeline, and writing a private letter
 
-### Home limitations before Supabase
+### Home limitations
 
-- Couple names, initials, caption, relationship date, notes, and memories are fictional local demo data.
-- Home reads the shared provider, so Timeline and Gallery changes appear immediately during the same browser session.
+- Daily love notes remain a generic local editorial collection because the schema has no love-note entity.
+- Home reads shared database-backed providers, so Timeline and Gallery mutations appear immediately.
 - The Add Memory action opens Timeline, where the existing floating action button starts the form; it does not open a global form from Home.
-- The Write Letter action opens the implemented session-only Love Letters experience.
-- Relationship settings, identity, persistence, and cross-device synchronization require the planned Supabase integration.
+- The Write Letter action opens the persistent Love Letters experience.
+- Realtime cross-device synchronization remains planned.
 
 ## Implemented Timeline frontend
 
@@ -412,20 +421,17 @@ The `/timeline` route now provides a polished, responsive frontend prototype wit
 
 - Chronological rendering, formatted dates, a connected vertical line, and milestone-specific Lucide icons
 - Strongly typed memory and milestone models covering titles, descriptions, dates, photos, authorship, and audit timestamps
-- Fictional demo memories kept in a separate data module with abstract local SVG artwork rather than photographs of real people
-- Responsive memory cards, highlighted relationship/anniversary milestones, expandable descriptions, and full-screen photo viewing
-- A shared mobile form for adding and editing memories with required-field validation and optional image selection
-- Client-side image validation and preview using data URLs, avoiding unmanaged browser object URLs
+- Empty-by-default persistent memory data with no fictional production records
+- Responsive memory cards and highlighted relationship/anniversary milestones
+- A shared mobile form for adding and editing persistent text memories
 - Delete confirmation plus an empty timeline state after all entries are removed
 - Accessible modal semantics, focus trapping and restoration, Escape-key dismissal, background scroll locking, keyboard controls, and reduced-motion support
 
-### Timeline limitations before Supabase
+### Timeline limitations
 
-- Timeline state comes from the shared React provider. Added, edited, favorited, restored, or deleted memories reset when the page is refreshed.
-- Selected images remain only as in-memory data URLs and are not uploaded or persisted.
-- The displayed author values are neutral demo/local labels; no authenticated user identity exists yet.
-- Equal partner permissions are part of the planned Supabase authorization model and are not enforced by this frontend prototype.
-- Deletion is a temporary frontend soft delete with restoration from the Memories screen; database retention and recovery policies are not implemented.
+- One media file can currently be selected per memory in the UI, although the database model supports multiple rows.
+- Realtime subscriptions are not implemented.
+- Soft deletion and restoration are persistent, but automated retention cleanup is not implemented.
 
 ## Planned routing
 
@@ -506,6 +512,7 @@ Supabase Storage buckets will be private. Media paths should be opaque and scope
 couple-media/
 └── {couple_id}/
     ├── memories/{memory_id}/{media_id}.{ext}
+    ├── profiles/{user_id}/{media_id}.{ext}
     ├── albums/{album_id}/covers/{media_id}.{ext}
     └── avatars/{user_id}/{version}.{ext}
 ```
@@ -564,14 +571,14 @@ PWA installation improves convenience but does not make the web app equivalent t
 
 ## Environment variables
 
-Planned client configuration:
+Implemented browser client configuration:
 
 ```dotenv
 VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PUBLISHABLE_KEY=
 ```
 
-Exact names may use Supabase's current publishable-key terminology during setup. Vite exposes variables prefixed with `VITE_` to the browser, so they must never contain service-role keys or other secrets.
+`VITE_SUPABASE_ANON_KEY` remains supported as a legacy fallback. Vite exposes variables prefixed with `VITE_` to the browser, so they must never contain service-role keys, secret keys, database passwords, or CLI access tokens.
 
 Environment handling will follow these rules:
 
@@ -641,6 +648,110 @@ Tests should use synthetic data only. No real relationship content should appear
 
 Each phase should leave the application testable and reviewable. Security policies and migrations should evolve alongside features rather than being postponed until launch.
 
+## Implemented database foundation (locally verified; hosted unapplied)
+
+The repository includes versioned Supabase migrations under `supabase/migrations/`, PostgreSQL 17 local configuration in `supabase/config.toml`, and repeatable pgTAP suites under `supabase/tests/`. All four migrations are applied to hosted project `jthkuepideccbiqjqeci`; the clean local rehearsal and all 53 database assertions pass.
+
+### Entity relationships
+
+- `profiles` extends `auth.users` one-to-one.
+- `couples` has up to two `couple_members`; a unique user constraint allows each user to belong to only one couple.
+- `couple_invitations` belongs to a couple and its creating member, storing only a SHA-256 token hash.
+- `memories` belongs to a couple and references same-couple creator, updater, and optional deleter memberships.
+- `memory_media` belongs to a memory and stores only private Storage metadata/object paths, never binary/base64 content.
+- `love_letters` references same-couple sender and recipient memberships.
+- `love_letter_mailboxes` stores independent per-user favorite and deletion state for each letter.
+- `dreams` and `important_dates` are shared couple records with same-couple creator/updater references.
+
+Composite foreign keys prevent records from naming actors or resources from unrelated couples. Calendar-only values use `date`; audit and workflow timestamps use `timestamptz`.
+
+### Membership and invitations
+
+Direct client mutation of membership and invitation tables is denied. `create_couple`, `create_couple_invitation`, `accept_couple_invitation`, and `revoke_couple_invitation` are narrowly granted `SECURITY DEFINER` functions with an empty `search_path` and fully qualified objects.
+
+Invitation creation returns a cryptographically random raw token once and stores only its SHA-256 hash. Acceptance:
+
+1. Requires an authenticated caller who does not already belong to a couple.
+2. Locks the invitation row and rejects invalid, consumed, revoked, or expired tokens.
+3. Enforces optional recipient user/email binding.
+4. Locks the couple row before checking capacity and inserting membership.
+5. Marks the invitation consumed in the same transaction.
+
+The couple-row lock serializes competing acceptances. A separate capacity trigger also locks the couple and rejects a third member as defense in depth.
+
+### RLS strategy
+
+RLS is enabled for every user-facing application table. Default access is denied unless an explicit authenticated policy exists. Non-recursive `is_couple_member` and `shares_couple_with` helpers avoid membership-policy recursion.
+
+- Couple data is isolated by active membership.
+- Membership and invitation creation cannot be performed through ordinary table writes.
+- Memory soft-deleted rows remain accessible only to their two authorized couple members for restoration.
+- Draft letters are visible/editable only to their sender.
+- Sent content and participants are immutable; only the recipient can set read state.
+- Shared creator/ownership/audit fields and mailbox identities are immutable.
+- Actor columns use composite membership foreign keys, preventing cross-couple references.
+
+### Letter privacy and deletion
+
+Letter content is stored once in `love_letters`. `love_letter_mailboxes` creates a sender mailbox row immediately and a recipient row when the draft is sent. Favorite and `deleted_at` fields live on these per-user rows, so deleting a received letter does not remove it from the sender's Sent mailbox, and sender deletion does not remove the recipient copy. Production queries must join/filter the current user's mailbox row.
+
+### Private Storage design
+
+Migration `202611070003_private_storage.sql` creates a non-public `couple-media` bucket with a 25 MB object limit and an allowlist for JPEG, PNG, WebP, GIF, MP4, and WebM.
+
+Object paths must follow:
+
+```text
+{couple_id}/memories/{memory_id}/{opaque_filename}
+```
+
+Storage policies parse and validate the path, require authenticated couple membership, and require the referenced memory to belong to that couple. Both partners have equal object-management rights. Private media should be displayed through authenticated downloads or short-lived signed URLs, never public URLs.
+
+Permanent memory deletion cascades database media metadata but cannot transactionally delete Storage objects. A trusted Edge Function/job must remove objects with idempotent retries and reconciliation for partial failures.
+
+### Applying migrations
+
+Prerequisites are a running Docker-compatible runtime and the Supabase CLI. `psql` is optional for interactive diagnosis. Do not link this verification environment to a remote project.
+
+After confirming the prerequisites:
+
+```bash
+docker info
+supabase --version
+supabase start
+supabase db reset
+supabase test db
+```
+
+`supabase db reset` rebuilds only the disposable local database and applies all checked-in migrations. `supabase test db` runs 49 core pgTAP assertions plus a four-assertion, two-session invitation concurrency suite. For an existing environment, review the generated diff and apply through the project's controlled migration workflow. Do not run these initial migrations directly against production without first validating them in disposable local and staging databases.
+
+The detailed status and security review are in `supabase/SECURITY_VERIFICATION.md`. On 2026-11-07, a clean PostgreSQL 17 reset applied all four migrations and `supabase test db` passed 49 core assertions plus four independent-session concurrency assertions. The hosted database remains unchanged.
+
+Migration `202611070004_security_hardening.sql` additionally removes direct API mutation privileges from membership and invitation tables, revokes API execution of trigger-only functions, and prevents a draft sender from pre-populating the recipient's `read_at` state.
+
+### Local validation status (2026-11-07)
+
+| Check               | Result                                           |
+| ------------------- | ------------------------------------------------ |
+| `npm run format`    | Passed                                           |
+| `npm run typecheck` | Passed                                           |
+| `npm run lint`      | Passed with zero warnings                        |
+| `npm run build`     | Passed with Vite 8.3.6                           |
+| `supabase db reset` | Passed locally; four migrations applied in order |
+| `supabase test db`  | Passed locally; 53/53 assertions                 |
+
+Step 14 persistence and authorization validation uses the real local Supabase PostgreSQL stack. The suite covers both-partner shared CRUD, draft ownership, recipient-only read state, independent letter mailbox deletion/restoration, and cross-couple isolation. No automated browser test was run against hosted production accounts, and no fictional production records were inserted.
+
+The local structural inventory confirmed 10 RLS-enabled tables, 60 constraints, 14 triggers, 14 public functions, 27 public policies, four Storage policies, and the private `couple-media` bucket.
+
+### Hosted verification status (2026-11-07)
+
+The confirmed `Our-Relationship` project contains all four migration versions and the verified application schema. Physical backups were not listed and PITR remains disabled. See `supabase/HOSTED_VERIFICATION_REPORT.md` for the complete deployment and recovery assessment.
+
+### Rollback considerations
+
+The migrations create enums, tables, functions, triggers, policies, and a Storage bucket. Production rollback should prefer a forward corrective migration. Dropping the schema or bucket is destructive and does not automatically recover Storage objects. Before any rollback, export required data, inventory bucket contents, disable new writes, and verify restoration procedures. Function and policy changes can usually be rolled back independently; table/enum removal requires dependency-aware reverse order.
+
 ## Local development
 
 Prerequisites:
@@ -654,10 +765,15 @@ Install and start the application:
 git clone <repository-url>
 cd Our-Relationship
 npm install
+```
+
+Copy `.env.example` to the ignored `.env` file and configure the hosted project's browser-safe URL and publishable key. Never place a service-role key or database password in a `VITE_` variable. Then start Vite:
+
+```bash
 npm run dev
 ```
 
-Supabase is not connected, so no local Supabase or Docker setup is currently required. `.env.example` documents variables planned for the later integration.
+Supabase Auth, PostgreSQL product data, and private memory Storage are connected through the browser-safe client. Couple profiles, memories, letters, dreams, dates, mailbox state, and memory media are persistent. Profile Storage is ready locally but requires explicit hosted migration approval. Realtime remains deferred. The project-local Supabase CLI and Docker are used for migration and RLS validation.
 
 Available scripts:
 

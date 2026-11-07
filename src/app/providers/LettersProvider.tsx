@@ -1,173 +1,188 @@
-import { type ReactNode, useCallback, useMemo, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import {
   LettersContext,
   type LettersContextValue,
 } from '@/app/providers/letters-context'
-import { demoCoupleId, demoLetters } from '@/features/letters/data/demoLetters'
-import type {
-  LetterDraftInput,
-  LoveLetter,
-  PartnerId,
-} from '@/features/letters/types'
+import { useAuth } from '@/features/auth/useAuth'
+import type { LetterDraftInput, LoveLetter } from '@/features/letters/types'
+import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
+import {
+  createDraftRecord,
+  deleteDraftRecord,
+  loadLetters,
+  markLetterRead,
+  sendLetterRecord,
+  setLetterDeleted,
+  setLetterFavorite,
+  updateDraftRecord,
+} from '@/lib/supabase/services/letters-service'
 
-interface LettersProviderProps {
-  children: ReactNode
-}
-
-function isParticipant(letter: LoveLetter, partnerId: PartnerId) {
-  return letter.senderId === partnerId || letter.recipientId === partnerId
-}
-
-export function LettersProvider({ children }: LettersProviderProps) {
-  const [letters, setLetters] = useState<LoveLetter[]>(demoLetters)
-
-  const createDraft = useCallback((input: LetterDraftInput) => {
-    const now = new Date().toISOString()
-    const letter: LoveLetter = {
-      ...input,
-      id: crypto.randomUUID(),
-      coupleId: demoCoupleId,
-      status: 'draft',
-      createdAt: now,
-      updatedAt: now,
-      sentAt: null,
-      readAt: null,
-      favorite: false,
-      deletedAt: null,
-    }
-    setLetters((current) => [...current, letter])
-    return letter
-  }, [])
-
-  const updateDraft = useCallback(
-    (id: string, ownerId: PartnerId, input: LetterDraftInput) => {
-      const updatedAt = new Date().toISOString()
-      setLetters((current) =>
-        current.map((letter) => {
-          if (
-            letter.id !== id ||
-            letter.senderId !== ownerId ||
-            letter.status !== 'draft' ||
-            letter.deletedAt
-          ) {
-            return letter
-          }
-          return { ...letter, ...input, senderId: ownerId, updatedAt }
-        }),
-      )
-    },
-    [],
+export function LettersProvider({ children }: { children: ReactNode }) {
+  const auth = useAuth()
+  const session = useCoupleSession()
+  const [letters, setLetters] = useState<LoveLetter[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const memberNames = useMemo(
+    () =>
+      new Map(
+        session.couple?.members.map((member) => [
+          member.userId,
+          member.displayName,
+        ]) ?? [],
+      ),
+    [session.couple],
   )
 
-  const softDelete = useCallback((id: string, participantId: PartnerId) => {
-    const deletedAt = new Date().toISOString()
-    setLetters((current) =>
-      current.map((letter) =>
-        letter.id === id &&
-        isParticipant(letter, participantId) &&
-        !letter.deletedAt
-          ? { ...letter, deletedAt, updatedAt: deletedAt }
-          : letter,
-      ),
-    )
-  }, [])
+  const retry = useCallback(
+    async (showLoading = true) => {
+      if (!session.couple || !auth.user) {
+        setLetters([])
+        setLoading(false)
+        return
+      }
+      if (showLoading) setLoading(true)
+      setError(null)
+      try {
+        setLetters(
+          await loadLetters(session.couple.coupleId, auth.user.id, memberNames),
+        )
+      } catch (caught) {
+        setError(
+          caught instanceof Error ? caught.message : 'Unable to load letters.',
+        )
+      } finally {
+        if (showLoading) setLoading(false)
+      }
+    },
+    [auth.user, memberNames, session.couple],
+  )
 
-  const deleteDraft = useCallback((id: string, ownerId: PartnerId) => {
-    const deletedAt = new Date().toISOString()
-    setLetters((current) =>
-      current.map((letter) =>
-        letter.id === id &&
-        letter.senderId === ownerId &&
-        letter.status === 'draft' &&
-        !letter.deletedAt
-          ? { ...letter, deletedAt, updatedAt: deletedAt }
-          : letter,
-      ),
-    )
-  }, [])
+  useEffect(() => {
+    const timeout = window.setTimeout(() => void retry(), 0)
+    return () => window.clearTimeout(timeout)
+  }, [retry])
 
-  const sendLetter = useCallback((id: string, ownerId: PartnerId) => {
-    const sentAt = new Date().toISOString()
-    setLetters((current) =>
-      current.map((letter) => {
-        if (
-          letter.id !== id ||
-          letter.senderId !== ownerId ||
-          letter.status !== 'draft' ||
-          letter.deletedAt ||
-          !letter.title.trim() ||
-          !letter.body.trim()
-        ) {
-          return letter
-        }
-        return { ...letter, status: 'sent', sentAt, updatedAt: sentAt }
-      }),
-    )
-  }, [])
+  const runMutation = useCallback(
+    async (operation: () => Promise<void>) => {
+      setError(null)
+      try {
+        await operation()
+        await retry(false)
+      } catch (caught) {
+        setError(
+          caught instanceof Error ? caught.message : 'Letter update failed.',
+        )
+      }
+    },
+    [retry],
+  )
 
-  const createAndSendLetter = useCallback((input: LetterDraftInput) => {
-    const now = new Date().toISOString()
-    const letter: LoveLetter = {
-      ...input,
-      id: crypto.randomUUID(),
-      coupleId: demoCoupleId,
-      status: 'sent',
-      createdAt: now,
-      updatedAt: now,
-      sentAt: now,
-      readAt: null,
-      favorite: false,
-      deletedAt: null,
+  const participantIds = useCallback(() => {
+    if (!session.couple || !auth.user) throw new Error('Not signed in.')
+    const recipient = session.couple.members.find(
+      (member) => member.userId !== auth.user?.id,
+    )
+    if (!recipient) throw new Error('Your partner has not joined yet.')
+    return {
+      coupleId: session.couple.coupleId,
+      senderId: auth.user.id,
+      recipientId: recipient.userId,
     }
-    setLetters((current) => [...current, letter])
-    return letter
-  }, [])
+  }, [auth.user, session.couple])
 
-  const markAsRead = useCallback((id: string, recipientId: PartnerId) => {
-    const readAt = new Date().toISOString()
-    setLetters((current) =>
-      current.map((letter) =>
-        letter.id === id &&
-        letter.recipientId === recipientId &&
-        letter.status === 'sent' &&
-        !letter.readAt &&
-        !letter.deletedAt
-          ? { ...letter, readAt, updatedAt: readAt }
-          : letter,
-      ),
-    )
-  }, [])
+  const createDraft = useCallback(
+    (input: LetterDraftInput) =>
+      runMutation(async () => {
+        const ids = participantIds()
+        await createDraftRecord(
+          ids.coupleId,
+          ids.senderId,
+          ids.recipientId,
+          input,
+        )
+      }),
+    [participantIds, runMutation],
+  )
 
-  const toggleFavorite = useCallback((id: string, participantId: PartnerId) => {
-    const updatedAt = new Date().toISOString()
-    setLetters((current) =>
-      current.map((letter) =>
-        letter.id === id &&
-        isParticipant(letter, participantId) &&
-        !letter.deletedAt
-          ? { ...letter, favorite: !letter.favorite, updatedAt }
-          : letter,
-      ),
-    )
-  }, [])
+  const updateDraft = useCallback(
+    (id: string, _ownerId: string, input: LetterDraftInput) =>
+      runMutation(() => updateDraftRecord(id, input)),
+    [runMutation],
+  )
 
-  const restoreLetter = useCallback((id: string, participantId: PartnerId) => {
-    const updatedAt = new Date().toISOString()
-    setLetters((current) =>
-      current.map((letter) =>
-        letter.id === id &&
-        isParticipant(letter, participantId) &&
-        letter.deletedAt
-          ? { ...letter, deletedAt: null, updatedAt }
-          : letter,
-      ),
-    )
-  }, [])
+  const deleteDraft = useCallback(
+    (id: string) => runMutation(() => deleteDraftRecord(id)),
+    [runMutation],
+  )
+
+  const sendLetter = useCallback(
+    (id: string) => runMutation(() => sendLetterRecord(id)),
+    [runMutation],
+  )
+
+  const createAndSendLetter = useCallback(
+    (input: LetterDraftInput) =>
+      runMutation(async () => {
+        const ids = participantIds()
+        const draft = await createDraftRecord(
+          ids.coupleId,
+          ids.senderId,
+          ids.recipientId,
+          input,
+        )
+        await sendLetterRecord(draft.id)
+      }),
+    [participantIds, runMutation],
+  )
+
+  const markAsRead = useCallback(
+    (id: string) => runMutation(() => markLetterRead(id)),
+    [runMutation],
+  )
+
+  const toggleFavorite = useCallback(
+    (id: string) =>
+      runMutation(async () => {
+        if (!auth.user) throw new Error('Not signed in.')
+        const letter = letters.find((item) => item.id === id)
+        if (!letter) throw new Error('Letter was not found.')
+        await setLetterFavorite(id, auth.user.id, !letter.favorite)
+      }),
+    [auth.user, letters, runMutation],
+  )
+
+  const softDelete = useCallback(
+    (id: string) =>
+      runMutation(async () => {
+        if (!auth.user) throw new Error('Not signed in.')
+        await setLetterDeleted(id, auth.user.id, true)
+      }),
+    [auth.user, runMutation],
+  )
+
+  const restoreLetter = useCallback(
+    (id: string) =>
+      runMutation(async () => {
+        if (!auth.user) throw new Error('Not signed in.')
+        await setLetterDeleted(id, auth.user.id, false)
+      }),
+    [auth.user, runMutation],
+  )
 
   const value = useMemo<LettersContextValue>(
     () => ({
       letters,
+      loading,
+      error,
+      retry,
       createDraft,
       updateDraft,
       deleteDraft,
@@ -182,9 +197,12 @@ export function LettersProvider({ children }: LettersProviderProps) {
       createAndSendLetter,
       createDraft,
       deleteDraft,
+      error,
       letters,
+      loading,
       markAsRead,
       restoreLetter,
+      retry,
       sendLetter,
       softDelete,
       toggleFavorite,

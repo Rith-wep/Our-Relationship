@@ -28,7 +28,7 @@ export function RelationshipCounter({
   }
 
   return (
-    <Card className="border-primary/15">
+    <Card className="border-border">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wide text-primary uppercase">
@@ -43,7 +43,7 @@ export function RelationshipCounter({
             </span>
           </p>
         </div>
-        <div className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary">
+        <div className="flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-button">
           <Clock3 aria-hidden="true" className="size-5" />
         </div>
       </div>

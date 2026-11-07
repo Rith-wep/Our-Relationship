@@ -26,7 +26,7 @@ export function AnniversaryCard({
   return (
     <Card>
       <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
           <CalendarHeart aria-hidden="true" className="size-5" />
         </div>
         <div className="min-w-0 flex-1">

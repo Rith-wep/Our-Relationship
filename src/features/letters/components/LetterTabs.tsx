@@ -29,7 +29,7 @@ export function LetterTabs({ selected, counts, onChange }: LetterTabsProps) {
           className={[
             'relative min-h-12 border-b-2 px-2 text-sm font-semibold transition-colors motion-reduce:transition-none',
             selected === tab.value
-              ? 'border-primary text-primary'
+              ? 'border-border-strong text-primary'
               : 'border-transparent text-text-secondary hover:text-text-primary',
           ].join(' ')}
         >

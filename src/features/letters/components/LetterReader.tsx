@@ -1,7 +1,6 @@
 import { ArrowLeft, Heart, Pencil, Trash2 } from 'lucide-react'
 
 import { IconButton } from '@/components/ui/IconButton'
-import { getPartner } from '@/features/letters/data/demoLetters'
 import type { LoveLetter, PartnerId } from '@/features/letters/types'
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
 
@@ -28,8 +27,6 @@ export function LetterReader({
   onDelete,
   onEdit,
 }: LetterReaderProps) {
-  const sender = letter ? getPartner(letter.senderId) : undefined
-  const recipient = letter ? getPartner(letter.recipientId) : undefined
   const canEdit =
     letter?.status === 'draft' && letter.senderId === currentPartnerId
   const displayDate = letter?.sentAt ?? letter?.updatedAt
@@ -43,7 +40,7 @@ export function LetterReader({
       size="letter"
     >
       {letter && displayDate ? (
-        <article className="flex h-full flex-col bg-[#fffbf5]">
+        <article className="flex h-full flex-col bg-card">
           <div className="flex shrink-0 items-center justify-between border-b border-amber-900/5 px-3 py-2">
             <IconButton label="Back to letters" onClick={onClose}>
               <ArrowLeft aria-hidden="true" className="size-5" />
@@ -81,7 +78,7 @@ export function LetterReader({
             <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
               {letter.status === 'draft'
                 ? 'Unsent draft'
-                : `For ${recipient?.name ?? 'you'}`}
+                : `For ${letter.recipientName}`}
             </p>
             <h2 className="mt-3 font-serif text-[1.75rem] leading-9 font-semibold tracking-[-0.02em] text-stone-900">
               {letter.title}
@@ -109,9 +106,7 @@ export function LetterReader({
 
             <footer className="mt-10 border-t border-amber-900/10 pt-6 font-serif text-stone-700">
               <p className="text-sm">With love,</p>
-              <p className="mt-1 text-lg font-semibold">
-                {sender?.name ?? 'Your partner'}
-              </p>
+              <p className="mt-1 text-lg font-semibold">{letter.senderName}</p>
             </footer>
           </div>
         </article>

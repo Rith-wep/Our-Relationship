@@ -48,12 +48,21 @@ export function MemoryDetail({
       {memory ? (
         <div className="flex h-[calc(100%-4.75rem)] flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {memory.photo ? (
-              <img
-                src={memory.photo.src}
-                alt={memory.photo.alt}
-                className="aspect-[4/3] w-full bg-surface object-cover"
-              />
+            {memory.media[0] ? (
+              memory.media[0].mediaType === 'video' ? (
+                <video
+                  src={memory.media[0].src}
+                  controls
+                  playsInline
+                  className="aspect-[4/3] w-full bg-surface object-contain"
+                />
+              ) : (
+                <img
+                  src={memory.media[0].src}
+                  alt={memory.media[0].alt}
+                  className="aspect-[4/3] w-full bg-surface object-cover"
+                />
+              )
             ) : (
               <div className="flex aspect-[4/3] items-center justify-center bg-primary-soft text-primary">
                 <CalendarDays aria-hidden="true" className="size-8" />
@@ -126,7 +135,7 @@ export function MemoryDetail({
             </div>
           </div>
 
-          <div className="flex shrink-0 gap-3 border-t border-border bg-background px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="flex shrink-0 gap-3 border-t border-border bg-card px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <Button
               variant="secondary"
               fullWidth

@@ -6,15 +6,11 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ComposeLetterDialog } from '@/features/letters/components/ComposeLetterDialog'
+import { AuthenticatedIdentity } from '@/features/letters/components/AuthenticatedIdentity'
 import { DeletedLetters } from '@/features/letters/components/DeletedLetters'
 import { LetterCard } from '@/features/letters/components/LetterCard'
 import { LetterReader } from '@/features/letters/components/LetterReader'
 import { LetterTabs } from '@/features/letters/components/LetterTabs'
-import { PartnerSwitcher } from '@/features/letters/components/PartnerSwitcher'
-import {
-  demoPartners,
-  getOtherPartner,
-} from '@/features/letters/data/demoLetters'
 import type {
   LetterDraftInput,
   LoveLetter,
@@ -22,6 +18,8 @@ import type {
 } from '@/features/letters/types'
 import type { LetterBox } from '@/features/letters/view-types'
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
+import { useAuth } from '@/features/auth/useAuth'
+import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 
 const emptyStates: Record<LetterBox, { title: string; description: string }> = {
   inbox: {
@@ -52,8 +50,9 @@ export function LettersPage() {
     softDelete,
     restoreLetter,
   } = useLetters()
-  const [currentPartnerId, setCurrentPartnerId] =
-    useState<PartnerId>('partner-a')
+  const auth = useAuth()
+  const coupleSession = useCoupleSession()
+  const currentPartnerId: PartnerId = auth.user?.id ?? ''
   const [box, setBox] = useState<LetterBox>('inbox')
   const [showDeleted, setShowDeleted] = useState(false)
   const [composeLetter, setComposeLetter] = useState<
@@ -61,7 +60,9 @@ export function LettersPage() {
   >()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [letterToDelete, setLetterToDelete] = useState<LoveLetter | null>(null)
-  const otherPartner = getOtherPartner(currentPartnerId)
+  const otherPartner = coupleSession.couple?.members.find(
+    (member) => member.userId !== currentPartnerId,
+  )
 
   const activeLetters = useMemo(
     () => letters.filter((letter) => !letter.deletedAt),
@@ -110,35 +111,31 @@ export function LettersPage() {
   const selectedLetter =
     activeLetters.find((letter) => letter.id === selectedId) ?? null
 
-  const handleIdentityChange = (partnerId: PartnerId) => {
-    setCurrentPartnerId(partnerId)
-    setSelectedId(null)
-    setComposeLetter(undefined)
-    setShowDeleted(false)
-  }
-
   const handleOpenLetter = (letter: LoveLetter) => {
     if (letter.status === 'draft') {
       setComposeLetter(letter)
       return
     }
-    markAsRead(letter.id, currentPartnerId)
+    if (letter.recipientId === currentPartnerId && !letter.readAt) {
+      void markAsRead(letter.id, currentPartnerId)
+    }
     setSelectedId(letter.id)
   }
 
-  const handleSaveDraft = (input: LetterDraftInput) => {
-    if (composeLetter) updateDraft(composeLetter.id, currentPartnerId, input)
-    else createDraft(input)
+  const handleSaveDraft = async (input: LetterDraftInput) => {
+    if (composeLetter)
+      await updateDraft(composeLetter.id, currentPartnerId, input)
+    else await createDraft(input)
     setComposeLetter(undefined)
     setBox('drafts')
   }
 
-  const handleSend = (input: LetterDraftInput) => {
+  const handleSend = async (input: LetterDraftInput) => {
     if (composeLetter) {
-      updateDraft(composeLetter.id, currentPartnerId, input)
-      sendLetter(composeLetter.id, currentPartnerId)
+      await updateDraft(composeLetter.id, currentPartnerId, input)
+      await sendLetter(composeLetter.id, currentPartnerId)
     } else {
-      createAndSendLetter(input)
+      await createAndSendLetter(input)
     }
     setComposeLetter(undefined)
     setBox('sent')
@@ -154,11 +151,11 @@ export function LettersPage() {
     setLetterToDelete(letter)
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!letterToDelete) return
     if (letterToDelete.status === 'draft')
-      deleteDraft(letterToDelete.id, currentPartnerId)
-    else softDelete(letterToDelete.id, currentPartnerId)
+      await deleteDraft(letterToDelete.id, currentPartnerId)
+    else await softDelete(letterToDelete.id, currentPartnerId)
     setLetterToDelete(null)
   }
 
@@ -168,7 +165,11 @@ export function LettersPage() {
         title="Love Letters"
         description="Some feelings deserve more than a message."
         action={
-          <Button size="sm" onClick={() => setComposeLetter(null)}>
+          <Button
+            size="sm"
+            disabled={!otherPartner}
+            onClick={() => setComposeLetter(null)}
+          >
             <PenLine aria-hidden="true" className="size-4" />
             Compose
           </Button>
@@ -176,10 +177,9 @@ export function LettersPage() {
       />
 
       <div className="mt-5">
-        <PartnerSwitcher
-          partners={demoPartners}
-          currentPartnerId={currentPartnerId}
-          onChange={handleIdentityChange}
+        <AuthenticatedIdentity
+          displayName={coupleSession.displayName ?? 'Partner'}
+          email={auth.user?.email ?? 'Authenticated account'}
         />
       </div>
 
@@ -203,7 +203,7 @@ export function LettersPage() {
           <DeletedLetters
             letters={deletedLetters}
             currentPartnerId={currentPartnerId}
-            onRestore={(id) => restoreLetter(id, currentPartnerId)}
+            onRestore={(id) => void restoreLetter(id, currentPartnerId)}
           />
         ) : visibleLetters.length > 0 ? (
           <div className="space-y-3">
@@ -250,17 +250,20 @@ export function LettersPage() {
         open={composeLetter !== undefined}
         letter={composeLetter ?? undefined}
         senderId={currentPartnerId}
-        recipientId={otherPartner.id}
+        recipientId={otherPartner?.userId ?? ''}
+        recipientName={otherPartner?.displayName ?? 'Your partner'}
         onClose={() => setComposeLetter(undefined)}
-        onSaveDraft={handleSaveDraft}
-        onSend={handleSend}
+        onSaveDraft={(input) => void handleSaveDraft(input)}
+        onSend={(input) => void handleSend(input)}
       />
 
       <LetterReader
         letter={selectedLetter}
         currentPartnerId={currentPartnerId}
         onClose={() => setSelectedId(null)}
-        onFavorite={(letter) => toggleFavorite(letter.id, currentPartnerId)}
+        onFavorite={(letter) =>
+          void toggleFavorite(letter.id, currentPartnerId)
+        }
         onDelete={handleDeleteRequest}
         onEdit={handleEdit}
       />
@@ -268,7 +271,7 @@ export function LettersPage() {
       <MemoryDialog
         open={Boolean(letterToDelete)}
         title="Move to Recently Deleted?"
-        description="You can restore this letter later during the current session."
+        description="You can restore this letter from Recently Deleted."
         onClose={() => setLetterToDelete(null)}
         size="compact"
       >
@@ -286,7 +289,7 @@ export function LettersPage() {
             >
               Cancel
             </Button>
-            <Button fullWidth onClick={handleConfirmDelete}>
+            <Button fullWidth onClick={() => void handleConfirmDelete()}>
               Delete
             </Button>
           </div>

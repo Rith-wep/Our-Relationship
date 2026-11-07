@@ -20,7 +20,7 @@ export function Card({
   return (
     <div
       className={[
-        'rounded-card border border-border bg-background shadow-soft',
+        'rounded-card border border-border-strong/70 bg-card shadow-soft',
         paddingStyles[padding],
         className,
       ].join(' ')}

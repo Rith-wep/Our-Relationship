@@ -15,17 +15,17 @@ export function CoupleProfile({
   const duration = useRelationshipDuration(profile.relationshipStartDate)
 
   return (
-    <Card className="overflow-hidden border-primary/10 bg-primary-soft/45">
+    <Card className="overflow-hidden border-border bg-primary-soft/45">
       <div className="flex flex-col items-center text-center">
         <div className="flex -space-x-4">
           {profile.partners.map((partner, index) => (
             <div
               key={partner.id}
               className={[
-                'flex size-20 items-center justify-center overflow-hidden rounded-full border-4 border-white text-xl font-semibold shadow-soft',
+                'flex size-20 items-center justify-center overflow-hidden rounded-full border-4 border-border text-xl font-semibold shadow-soft',
                 index === 0
-                  ? 'bg-rose-200 text-rose-800'
-                  : 'bg-orange-100 text-orange-800',
+                  ? 'bg-primary-soft text-primary-strong'
+                  : 'bg-surface text-text-secondary',
               ].join(' ')}
             >
               {partner.photo ? (

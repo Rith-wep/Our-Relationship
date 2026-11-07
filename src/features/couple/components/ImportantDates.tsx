@@ -49,7 +49,7 @@ export function ImportantDates({
             key={item.id}
             className="flex items-center gap-3 rounded-card border border-border bg-white p-4 shadow-soft"
           >
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
               <CalendarHeart className="size-5" />
             </div>
             <div className="min-w-0 flex-1">

@@ -1,5 +1,5 @@
 export type LetterStatus = 'draft' | 'sent'
-export type PartnerId = 'partner-a' | 'partner-b'
+export type PartnerId = string
 
 export interface PartnerIdentity {
   id: PartnerId
@@ -12,6 +12,8 @@ export interface LoveLetter {
   coupleId: string
   senderId: PartnerId
   recipientId: PartnerId
+  senderName: string
+  recipientName: string
   title: string
   body: string
   status: LetterStatus
