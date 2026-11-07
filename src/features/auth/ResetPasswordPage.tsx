@@ -42,7 +42,7 @@ export function ResetPasswordPage() {
     <AuthLayout
       eyebrow="Account recovery"
       title="Choose a new password"
-      description="Use a strong password you don’t reuse elsewhere."
+      description="Choose a strong password."
     >
       <form className="space-y-4" onSubmit={(event) => void submit(event)}>
         {error ? <AuthMessage>{error}</AuthMessage> : null}

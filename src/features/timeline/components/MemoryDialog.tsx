@@ -22,7 +22,7 @@ interface MemoryDialogProps {
 
 const sizeStyles = {
   sheet:
-    'mt-auto max-h-[min(90dvh,48rem)] w-full max-w-app rounded-t-[1.25rem] sm:my-auto sm:rounded-card',
+    'm-auto max-h-[min(90dvh,48rem)] w-[calc(100%-2rem)] max-w-app rounded-card',
   compact: 'm-auto w-[calc(100%-2rem)] max-w-sm rounded-card',
   viewer:
     'm-auto h-full w-full bg-dark text-on-dark sm:h-auto sm:max-h-[92dvh] sm:max-w-3xl sm:rounded-card',
@@ -134,7 +134,7 @@ export function MemoryDialog({
               shouldReduceMotion
                 ? false
                 : size === 'sheet'
-                  ? { opacity: 0, y: 24 }
+                  ? { opacity: 0, y: 12, scale: 0.985 }
                   : { opacity: 0, scale: 0.98 }
             }
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -142,7 +142,7 @@ export function MemoryDialog({
               shouldReduceMotion
                 ? { opacity: 0 }
                 : size === 'sheet'
-                  ? { opacity: 0, y: 18 }
+                  ? { opacity: 0, y: 10, scale: 0.985 }
                   : { opacity: 0, scale: 0.98 }
             }
             transition={{
@@ -165,10 +165,7 @@ export function MemoryDialog({
                     {title}
                   </h2>
                   {description ? (
-                    <p
-                      id={descriptionId}
-                      className="mt-1 text-sm leading-5 text-text-secondary"
-                    >
+                    <p id={descriptionId} className="sr-only">
                       {description}
                     </p>
                   ) : null}

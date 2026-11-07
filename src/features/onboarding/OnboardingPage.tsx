@@ -63,7 +63,7 @@ export function OnboardingPage() {
       <AuthLayout
         eyebrow="Invitation ready"
         title="Bring your partner in"
-        description="This private link is bound to their email and can be used once."
+        description="A single-use link for their email."
       >
         <div className="flex items-start gap-3 rounded-control bg-primary-soft p-3.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-white">
@@ -113,7 +113,7 @@ export function OnboardingPage() {
       <AuthLayout
         eyebrow="You’ve been invited"
         title="Join your shared space"
-        description="Confirm how your name should appear to your partner."
+        description="Choose your display name."
       >
         <form className="space-y-4" onSubmit={(event) => void accept(event)}>
           {error ? <AuthMessage>{error}</AuthMessage> : null}
@@ -192,7 +192,7 @@ export function OnboardingPage() {
             rows={3}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            className="mt-2 w-full resize-none rounded-control border border-border-strong bg-card px-3.5 py-3 text-base leading-6 text-text-primary"
+            className="form-control mt-2 resize-none py-3 leading-6"
           />
         </label>
         <Button type="submit" fullWidth disabled={submitting}>

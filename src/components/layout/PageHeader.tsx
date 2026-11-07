@@ -10,7 +10,7 @@ export function PageHeader({ title, action }: PageHeaderProps) {
   return (
     <header className="flex items-center justify-between gap-4 py-2">
       <div className="min-w-0">
-        <h1 className="page-title-outlined text-2xl leading-8 font-semibold tracking-[-0.02em]">
+        <h1 className="page-title-outlined text-[1.75rem] leading-9 font-semibold tracking-[-0.02em]">
           {title}
         </h1>
       </div>

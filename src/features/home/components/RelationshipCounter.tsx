@@ -18,11 +18,6 @@ export function RelationshipCounter({
         <h2 className="text-lg font-semibold text-text-primary">
           Our time together
         </h2>
-        <p className="mt-2 text-sm leading-6 text-text-secondary">
-          {duration.status === 'future'
-            ? 'The relationship counter will begin on the configured start date.'
-            : 'Add a valid relationship start date to begin the counter.'}
-        </p>
       </Card>
     )
   }

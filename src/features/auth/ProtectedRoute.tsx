@@ -1,6 +1,6 @@
-import { Heart } from 'lucide-react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 
+import { PageSkeleton } from '@/components/ui/PageSkeleton'
 import { useAuth } from '@/features/auth/useAuth'
 
 export function ProtectedRoute() {
@@ -8,22 +8,7 @@ export function ProtectedRoute() {
   const location = useLocation()
 
   if (auth.loading) {
-    return (
-      <main
-        className="flex min-h-dvh items-center justify-center bg-background"
-        role="status"
-      >
-        <div className="text-center">
-          <Heart
-            className="mx-auto size-6 fill-current text-primary"
-            aria-hidden="true"
-          />
-          <p className="mt-3 text-sm text-text-secondary">
-            Opening your space…
-          </p>
-        </div>
-      </main>
-    )
+    return <PageSkeleton fullscreen />
   }
 
   if (!auth.session) {

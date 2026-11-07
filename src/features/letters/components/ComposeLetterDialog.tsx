@@ -25,8 +25,7 @@ interface FormErrors {
   body?: string
 }
 
-const fieldStyles =
-  'w-full rounded-control border border-border-strong bg-card px-3.5 text-base text-text-primary placeholder:text-text-muted'
+const fieldStyles = 'form-control'
 
 export function ComposeLetterDialog({
   open,
@@ -89,7 +88,7 @@ export function ComposeLetterDialog({
     <MemoryDialog
       open={open}
       title={letter ? 'Edit draft' : 'Write a love letter'}
-      description={`A private note for ${recipientName}.`}
+      description={`To ${recipientName}.`}
       onClose={requestClose}
       size="detail"
     >
@@ -176,7 +175,7 @@ export function ComposeLetterDialog({
               aria-describedby={
                 errors.body ? `${formId}-body-error` : undefined
               }
-              className={`${fieldStyles} min-h-64 resize-y py-3.5 leading-7`}
+              className={`${fieldStyles} font-romantic min-h-64 resize-y py-3.5 text-lg leading-8`}
             />
             <div className="mt-1 flex items-start justify-between gap-3">
               {errors.body ? (

@@ -56,10 +56,7 @@ export function TimelinePage() {
 
   return (
     <section className="py-2">
-      <PageHeader
-        title="Our Story"
-        description="Every moment brought us closer."
-      />
+      <PageHeader title="Our Story" description="Our moments together." />
 
       <TimelineList
         memories={sortedMemories}
@@ -81,11 +78,7 @@ export function TimelinePage() {
       <MemoryDialog
         open={formMemory !== undefined}
         title={formMemory ? 'Edit memory' : 'Add a memory'}
-        description={
-          formMemory
-            ? 'Update this moment in your timeline.'
-            : 'Save a moment from your story.'
-        }
+        description={formMemory ? 'Update this memory.' : 'Add a memory.'}
         onClose={closeForm}
       >
         <MemoryForm
@@ -101,7 +94,7 @@ export function TimelinePage() {
       <MemoryDialog
         open={Boolean(memoryToDelete)}
         title="Move to Recently Deleted?"
-        description="You can restore this memory from the Memories screen."
+        description="Restore it anytime."
         onClose={closeDeleteDialog}
         size="compact"
       >

@@ -80,7 +80,7 @@ export function LetterReader({
                 ? 'Unsent draft'
                 : `For ${letter.recipientName}`}
             </p>
-            <h2 className="mt-3 font-serif text-[1.75rem] leading-9 font-semibold tracking-[-0.02em] text-stone-900">
+            <h2 className="font-romantic mt-3 text-[1.75rem] leading-9 font-semibold tracking-[-0.02em] text-stone-900">
               {letter.title}
             </h2>
             <time
@@ -90,7 +90,7 @@ export function LetterReader({
               {readerDateFormatter.format(new Date(displayDate))}
             </time>
 
-            <div className="mt-8 space-y-5 font-serif text-[17px] leading-8 text-stone-700">
+            <div className="font-romantic mt-8 space-y-5 text-xl leading-8 text-stone-700">
               {letter.body ? (
                 letter.body
                   .split(/\n\s*\n/)
@@ -104,7 +104,7 @@ export function LetterReader({
               )}
             </div>
 
-            <footer className="mt-10 border-t border-amber-900/10 pt-6 font-serif text-stone-700">
+            <footer className="font-romantic mt-10 border-t border-amber-900/10 pt-6 text-stone-700">
               <p className="text-sm">With love,</p>
               <p className="mt-1 text-lg font-semibold">{letter.senderName}</p>
             </footer>

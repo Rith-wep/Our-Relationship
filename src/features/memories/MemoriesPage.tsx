@@ -102,7 +102,7 @@ export function MemoriesPage() {
     <section className="py-2 pb-5">
       <PageHeader
         title="Our Memories"
-        description="The little moments that mean everything."
+        description="Keep your moments close."
         action={
           <Button size="sm" onClick={() => setFormMemory(null)}>
             <Plus aria-hidden="true" className="size-4" />
@@ -160,8 +160,8 @@ export function MemoriesPage() {
                 }
                 description={
                   activeMemories.length === 0
-                    ? 'Add the first moment to your shared gallery.'
-                    : 'Try another filter or add a new memory.'
+                    ? 'Add your first memory.'
+                    : 'Try another filter.'
                 }
                 icon={<Images aria-hidden="true" className="size-5" />}
                 action={
@@ -216,7 +216,7 @@ export function MemoriesPage() {
       <MemoryDialog
         open={Boolean(memoryToDelete)}
         title="Move to Recently Deleted?"
-        description="You can restore this memory from Recently Deleted."
+        description="Restore it anytime."
         onClose={closeDelete}
         size="compact"
       >
@@ -240,7 +240,7 @@ export function MemoriesPage() {
       <MemoryDialog
         open={Boolean(memoryToRemove)}
         title="Remove permanently?"
-        description="This memory cannot be restored after it is permanently removed."
+        description="This cannot be undone."
         onClose={closeRemove}
         size="compact"
       >

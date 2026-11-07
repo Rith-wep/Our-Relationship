@@ -1,6 +1,6 @@
-import { Heart } from 'lucide-react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 
+import { PageSkeleton } from '@/components/ui/PageSkeleton'
 import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 
 export function CoupleOnboardingGate() {
@@ -8,21 +8,7 @@ export function CoupleOnboardingGate() {
   const location = useLocation()
 
   if (session.loading) {
-    return (
-      <main
-        className="flex min-h-dvh items-center justify-center bg-background"
-        role="status"
-      >
-        <div className="text-center">
-          <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-button">
-            <Heart className="size-5 fill-current" aria-hidden="true" />
-          </span>
-          <p className="mt-3 text-sm text-text-secondary">
-            Finding your shared space…
-          </p>
-        </div>
-      </main>
-    )
+    return <PageSkeleton fullscreen />
   }
 
   if (session.error) {

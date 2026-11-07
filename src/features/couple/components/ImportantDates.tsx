@@ -31,14 +31,9 @@ export function ImportantDates({
   return (
     <section aria-labelledby="dates-title">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 id="dates-title" className="text-lg font-semibold">
-            Important Dates
-          </h2>
-          <p className="mt-0.5 text-xs text-text-secondary">
-            The days that belong to your story.
-          </p>
-        </div>
+        <h2 id="dates-title" className="text-lg font-semibold">
+          Important Dates
+        </h2>
         <Button size="sm" variant="secondary" onClick={onAdd}>
           <Plus className="size-4" /> Add
         </Button>

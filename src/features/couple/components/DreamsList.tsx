@@ -45,14 +45,9 @@ export function DreamsList({
   return (
     <section aria-labelledby="dreams-title">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 id="dreams-title" className="text-lg font-semibold">
-            Our Future Dreams
-          </h2>
-          <p className="mt-0.5 text-xs text-text-secondary">
-            {completed} of {dreams.length} completed
-          </p>
-        </div>
+        <h2 id="dreams-title" className="text-lg font-semibold">
+          Our Future Dreams
+        </h2>
         <Button size="sm" variant="secondary" onClick={onAdd}>
           <Plus className="size-4" /> Add
         </Button>
@@ -71,7 +66,7 @@ export function DreamsList({
             key={item}
             aria-pressed={filter === item}
             onClick={() => setFilter(item)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-semibold capitalize ${filter === item ? 'border-border-strong bg-primary text-text-primary' : 'border-border-strong bg-card text-text-secondary'}`}
+            className={`min-h-11 rounded-full border px-4 text-sm font-semibold capitalize ${filter === item ? 'border-border-strong bg-primary text-white' : 'border-border-strong bg-card text-text-secondary'}`}
           >
             {item}
           </button>

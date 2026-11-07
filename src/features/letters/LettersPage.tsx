@@ -24,16 +24,15 @@ import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 const emptyStates: Record<LetterBox, { title: string; description: string }> = {
   inbox: {
     title: 'Your inbox is quiet',
-    description: 'Letters sent to this partner will be kept here.',
+    description: 'New letters appear here.',
   },
   sent: {
     title: 'No letters sent yet',
-    description: 'Words you send to your partner will appear here.',
+    description: 'Send your first letter.',
   },
   drafts: {
     title: 'No unfinished letters',
-    description:
-      'Save a thought as a draft and return when the words feel right.',
+    description: 'Start a new draft.',
   },
 }
 
@@ -163,7 +162,7 @@ export function LettersPage() {
     <section className="py-2 pb-5">
       <PageHeader
         title="Love Letters"
-        description="Some feelings deserve more than a message."
+        description="Write from the heart."
         action={
           <Button
             size="sm"
@@ -179,7 +178,6 @@ export function LettersPage() {
       <div className="mt-5">
         <AuthenticatedIdentity
           displayName={coupleSession.displayName ?? 'Partner'}
-          email={auth.user?.email ?? 'Authenticated account'}
         />
       </div>
 
@@ -271,7 +269,7 @@ export function LettersPage() {
       <MemoryDialog
         open={Boolean(letterToDelete)}
         title="Move to Recently Deleted?"
-        description="You can restore this letter from Recently Deleted."
+        description="Restore it anytime."
         onClose={() => setLetterToDelete(null)}
         size="compact"
       >

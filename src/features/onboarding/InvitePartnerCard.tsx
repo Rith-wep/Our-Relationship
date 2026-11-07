@@ -38,12 +38,8 @@ export function InvitePartnerCard() {
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
             <Send className="size-4" aria-hidden="true" />
           </span>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold">One place, two accounts</p>
-            <p className="mt-1 text-xs leading-5 text-text-secondary">
-              The link expires after seven days and only works for the email you
-              specify.
-            </p>
           </div>
         </div>
         {invitation ? (

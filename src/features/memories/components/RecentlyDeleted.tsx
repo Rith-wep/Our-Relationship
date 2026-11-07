@@ -20,7 +20,7 @@ export function RecentlyDeleted({
       <div className="rounded-card border border-border bg-surface">
         <EmptyState
           title="Recently Deleted is empty"
-          description="Deleted memories appear here until restored or removed permanently."
+          description="Restore a deleted memory."
           icon={<Trash2 aria-hidden="true" className="size-5" />}
         />
       </div>
@@ -30,8 +30,7 @@ export function RecentlyDeleted({
   return (
     <div className="space-y-3">
       <p className="text-xs leading-5 text-text-secondary">
-        Deleted memories are temporary frontend state. They reset when the page
-        refreshes and do not expire automatically.
+        Restore or remove memories.
       </p>
       {memories.map((memory) => (
         <article

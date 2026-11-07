@@ -43,14 +43,15 @@ export function CoupleProfile({
         <h2 className="mt-4 text-xl font-semibold tracking-[-0.02em] text-text-primary">
           {profile.partners[0].name} &amp; {profile.partners[1].name}
         </h2>
-        <div className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
-          <CalendarDays aria-hidden="true" className="size-3.5 text-primary" />
-          <span>
-            {duration.status === 'active'
-              ? `${duration.totalDays.toLocaleString()} days together`
-              : 'A story waiting to begin'}
-          </span>
-        </div>
+        {duration.status === 'active' ? (
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
+            <CalendarDays
+              aria-hidden="true"
+              className="size-3.5 text-primary"
+            />
+            <span>{duration.totalDays.toLocaleString()} days together</span>
+          </div>
+        ) : null}
         <p className="mt-4 max-w-xs text-sm leading-6 text-text-secondary">
           {profile.description}
         </p>

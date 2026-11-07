@@ -29,7 +29,7 @@ export function ForgotPasswordPage() {
     <AuthLayout
       eyebrow="Account recovery"
       title="Reset your password"
-      description="We’ll send a secure recovery link to your account email."
+      description="Get a secure recovery link."
     >
       <form className="space-y-4" onSubmit={(event) => void submit(event)}>
         {error ? <AuthMessage>{error}</AuthMessage> : null}

@@ -1,5 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 
+import { PageSkeleton } from '@/components/ui/PageSkeleton'
+
 const CouplePage = lazy(() =>
   import('@/features/couple/CouplePage').then((module) => ({
     default: module.CouplePage,
@@ -25,6 +27,7 @@ const TimelinePage = lazy(() =>
     default: module.TimelinePage,
   })),
 )
+
 const LoginPage = lazy(() =>
   import('@/features/auth/LoginPage').then((module) => ({
     default: module.LoginPage,
@@ -52,20 +55,7 @@ const OnboardingPage = lazy(() =>
 )
 
 function RouteSuspense({ children }: { children: ReactNode }) {
-  return (
-    <Suspense
-      fallback={
-        <div
-          className="flex min-h-48 items-center justify-center"
-          role="status"
-        >
-          <span className="text-sm text-text-secondary">Loading…</span>
-        </div>
-      }
-    >
-      {children}
-    </Suspense>
-  )
+  return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
 }
 
 export function HomeRoute() {

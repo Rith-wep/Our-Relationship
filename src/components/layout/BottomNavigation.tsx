@@ -6,6 +6,7 @@ import {
   UserRound,
   type LucideIcon,
 } from 'lucide-react'
+import { LayoutGroup, motion, useReducedMotion } from 'motion/react'
 import { NavLink } from 'react-router'
 
 interface NavigationItem {
@@ -24,42 +25,67 @@ const navigationItems: NavigationItem[] = [
 ]
 
 export function BottomNavigation() {
+  const shouldReduceMotion = useReducedMotion()
+
   return (
     <nav
       aria-label="Primary navigation"
       className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card pb-nav-safe"
     >
-      <ul className="mx-auto grid h-16 max-w-content grid-cols-5 px-1">
-        {navigationItems.map(({ label, path, icon: Icon, end }) => (
-          <li key={path} className="min-w-0">
-            <NavLink
-              to={path}
-              end={end}
-              aria-label={label}
-              className={({ isActive }) =>
-                [
-                  'group flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 rounded-xl px-1',
-                  'text-text-muted transition-colors duration-150 ease-out motion-reduce:transition-none',
-                  isActive ? 'text-primary' : 'hover:text-text-secondary',
-                ].join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    aria-hidden="true"
-                    strokeWidth={isActive ? 2.25 : 1.9}
-                    className="size-[23px] transition-transform duration-150 group-active:scale-95 motion-reduce:transition-none"
-                  />
-                  <span className="truncate text-[11px] leading-none font-medium">
-                    {label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+      <LayoutGroup id="bottom-navigation">
+        <ul className="mx-auto grid h-16 max-w-content grid-cols-5 px-1">
+          {navigationItems.map(({ label, path, icon: Icon, end }) => (
+            <li key={path} className="min-w-0">
+              <NavLink
+                to={path}
+                end={end}
+                aria-label={label}
+                className={({ isActive }) =>
+                  [
+                    'group relative isolate flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 rounded-xl px-1',
+                    'text-text-muted transition-colors duration-150 ease-out motion-reduce:transition-none',
+                    isActive ? 'text-primary' : 'hover:text-text-secondary',
+                  ].join(' ')
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive ? (
+                      <motion.span
+                        layoutId="active-bottom-navigation"
+                        aria-hidden="true"
+                        className="absolute top-1.5 z-0 h-9 w-11 rounded-full bg-primary-soft"
+                        transition={
+                          shouldReduceMotion
+                            ? { duration: 0 }
+                            : {
+                                type: 'spring',
+                                stiffness: 420,
+                                damping: 34,
+                              }
+                        }
+                      />
+                    ) : null}
+                    <Icon
+                      aria-hidden="true"
+                      strokeWidth={isActive ? 2.25 : 1.9}
+                      className={[
+                        'relative z-10 size-[23px] transition-transform duration-150 group-active:scale-95 motion-reduce:transition-none',
+                        isActive ? 'text-[#ff69b4]' : '',
+                      ].join(' ')}
+                    />
+                    <span
+                      className={`relative z-10 truncate text-[11px] leading-none font-medium ${isActive ? 'text-[#ff69b4]' : ''}`}
+                    >
+                      {label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </LayoutGroup>
     </nav>
   )
 }

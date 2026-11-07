@@ -1,5 +1,12 @@
-import { ImagePlus, Trash2 } from 'lucide-react'
-import { type FormEvent, useId, useState } from 'react'
+import { Check, ChevronDown, ImagePlus, Trash2 } from 'lucide-react'
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react'
 
 import { Button } from '@/components/ui/Button'
 import {
@@ -32,8 +39,7 @@ const milestoneLabels: Record<MilestoneType, string> = {
   custom_event: 'Custom event',
 }
 
-const inputStyles =
-  'min-h-11 w-full rounded-control border border-border-strong bg-card px-3.5 text-base text-text-primary placeholder:text-text-muted'
+const inputStyles = 'form-control'
 
 export function MemoryForm({
   memory,
@@ -53,6 +59,44 @@ export function MemoryForm({
   const [mediaFile, setMediaFile] = useState<File>()
   const [removeMedia, setRemoveMedia] = useState(false)
   const [mediaError, setMediaError] = useState('')
+  const [milestoneOpen, setMilestoneOpen] = useState(false)
+  const milestoneRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!milestoneOpen) return
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (!milestoneRef.current?.contains(event.target as Node)) {
+        setMilestoneOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsidePress)
+    return () =>
+      document.removeEventListener('pointerdown', closeOnOutsidePress)
+  }, [milestoneOpen])
+
+  const handleMilestoneKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Escape') {
+      setMilestoneOpen(false)
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      setMilestoneOpen((current) => !current)
+      return
+    }
+
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    event.preventDefault()
+    const currentIndex = milestoneTypes.indexOf(milestoneType)
+    const direction = event.key === 'ArrowDown' ? 1 : -1
+    const nextIndex =
+      (currentIndex + direction + milestoneTypes.length) % milestoneTypes.length
+    setMilestoneType(milestoneTypes[nextIndex])
+    setMilestoneOpen(true)
+  }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -153,20 +197,57 @@ export function MemoryForm({
             >
               Milestone
             </label>
-            <select
-              id={`${formId}-type`}
-              value={milestoneType}
-              onChange={(event) =>
-                setMilestoneType(event.target.value as MilestoneType)
-              }
-              className={inputStyles}
-            >
-              {milestoneTypes.map((type) => (
-                <option key={type} value={type}>
-                  {milestoneLabels[type]}
-                </option>
-              ))}
-            </select>
+            <div ref={milestoneRef} className="relative">
+              <button
+                type="button"
+                id={`${formId}-type`}
+                aria-haspopup="listbox"
+                aria-expanded={milestoneOpen}
+                aria-controls={`${formId}-type-options`}
+                onClick={() => setMilestoneOpen((current) => !current)}
+                onKeyDown={handleMilestoneKeyDown}
+                className={`${inputStyles} flex items-center justify-between gap-2 text-left`}
+              >
+                <span className="truncate">
+                  {milestoneLabels[milestoneType]}
+                </span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`size-4 shrink-0 text-primary transition-transform ${milestoneOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {milestoneOpen ? (
+                <div
+                  id={`${formId}-type-options`}
+                  role="listbox"
+                  aria-label="Milestone"
+                  className="absolute top-[calc(100%+0.375rem)] right-0 z-30 max-h-64 w-max min-w-full overflow-y-auto rounded-control border border-border-strong bg-card p-1.5 shadow-shell"
+                >
+                  {milestoneTypes.map((type) => {
+                    const selected = type === milestoneType
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        onClick={() => {
+                          setMilestoneType(type)
+                          setMilestoneOpen(false)
+                        }}
+                        className={`flex min-h-11 w-full items-center justify-between gap-4 rounded-lg px-3 text-left text-sm font-medium transition-colors ${selected ? 'bg-primary text-white' : 'text-text-primary hover:bg-primary-soft'}`}
+                      >
+                        {milestoneLabels[type]}
+                        <Check
+                          aria-hidden="true"
+                          className={`size-4 shrink-0 ${selected ? 'opacity-100' : 'opacity-0'}`}
+                        />
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
 

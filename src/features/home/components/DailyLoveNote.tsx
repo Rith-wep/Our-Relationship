@@ -18,7 +18,7 @@ export function DailyLoveNote() {
   const note = loveNotes[(dailyIndex + noteOffset) % loveNotes.length]
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden border-border-strong bg-primary-soft/45">
       <div className="flex items-start gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
           <MessageCircleHeart aria-hidden="true" className="size-5" />
@@ -41,7 +41,7 @@ export function DailyLoveNote() {
               <RefreshCw aria-hidden="true" className="size-[18px]" />
             </IconButton>
           </div>
-          <blockquote className="mt-2 text-[15px] leading-6 font-medium text-text-primary">
+          <blockquote className="font-romantic mt-3 -ml-[3.25rem] w-[calc(100%+3.25rem)] px-4 text-center text-[1.35rem] leading-7 font-semibold tracking-[0.005em] text-text-primary italic">
             “{note}”
           </blockquote>
         </div>

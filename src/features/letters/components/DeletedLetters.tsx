@@ -20,7 +20,7 @@ export function DeletedLetters({
       <div className="rounded-card border border-border bg-surface">
         <EmptyState
           title="No deleted letters"
-          description="Deleted letters appear here so you can restore them."
+          description="Restore a deleted letter."
           icon={<Trash2 aria-hidden="true" className="size-5" />}
         />
       </div>

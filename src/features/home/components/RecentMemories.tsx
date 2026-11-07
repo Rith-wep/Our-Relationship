@@ -40,7 +40,7 @@ export function RecentMemories({ memories }: RecentMemoriesProps) {
       <div className="mt-3 space-y-3">
         {recentMemories.length === 0 ? (
           <p className="rounded-card border border-border bg-surface px-4 py-6 text-center text-sm text-text-secondary">
-            No shared memories yet. Add one from Timeline or Memories.
+            Add your first memory.
           </p>
         ) : null}
         {recentMemories.map((memory) => (

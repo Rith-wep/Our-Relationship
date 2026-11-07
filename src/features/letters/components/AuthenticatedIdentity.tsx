@@ -2,10 +2,8 @@ import { UserRound } from 'lucide-react'
 
 export function AuthenticatedIdentity({
   displayName,
-  email,
 }: {
   displayName: string
-  email: string
 }) {
   return (
     <section className="flex items-center gap-3 rounded-card border border-border-strong bg-card p-3 shadow-soft">
@@ -17,7 +15,6 @@ export function AuthenticatedIdentity({
         <p className="truncate text-sm font-semibold text-text-primary">
           {displayName}
         </p>
-        <p className="truncate text-xs text-text-secondary">{email}</p>
       </div>
     </section>
   )

@@ -53,7 +53,7 @@ export function RegisterPage() {
     <AuthLayout
       eyebrow="A private place for two"
       title="Create your account"
-      description="Your partner will use a separate account when you invite them."
+      description="Create your private account."
     >
       <form className="space-y-4" onSubmit={(event) => void submit(event)}>
         {error ? <AuthMessage>{error}</AuthMessage> : null}

@@ -30,7 +30,7 @@ export function MemoryFilters({ selected, onChange }: MemoryFiltersProps) {
               className={[
                 'min-h-11 rounded-full border px-4 text-sm font-semibold transition-colors motion-reduce:transition-none',
                 isSelected
-                  ? 'border-border-strong bg-primary text-text-primary'
+                  ? 'border-border-strong bg-primary text-white'
                   : 'border-border-strong bg-card text-text-secondary hover:text-text-primary',
               ].join(' ')}
             >

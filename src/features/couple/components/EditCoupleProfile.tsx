@@ -26,8 +26,7 @@ export function EditCoupleProfile({
   const [draft, setDraft] = useState(profile)
   const [error, setError] = useState('')
   const [photoFile, setPhotoFile] = useState<File>()
-  const input =
-    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base'
+  const input = 'form-control'
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -52,15 +51,18 @@ export function EditCoupleProfile({
   }
 
   return (
-    <form onSubmit={submit} className="flex max-h-[calc(90dvh-5rem)] flex-col">
-      <div className="space-y-5 overflow-y-auto p-5">
+    <form
+      onSubmit={submit}
+      className="flex min-h-0 max-h-[calc(90dvh-4rem)] flex-col"
+    >
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
         <div className="grid grid-cols-2 gap-4">
           {draft.partners.map((partner, index) => (
             <div key={partner.id}>
               <label className="mb-2 block text-sm font-medium text-text-primary">
                 Partner {index === 0 ? 'A' : 'B'}
               </label>
-              <div className="mb-3 flex aspect-square items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-primary shadow-soft">
+              <div className="mx-auto mb-3 flex aspect-square w-full max-w-32 items-center justify-center overflow-hidden rounded-full border border-border bg-surface text-primary shadow-soft">
                 {partner.photo ? (
                   <img
                     src={partner.photo}
@@ -196,7 +198,7 @@ export function EditCoupleProfile({
           </p>
         ) : null}
       </div>
-      <div className="flex gap-3 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="flex shrink-0 gap-3 border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Button
           variant="secondary"
           fullWidth

@@ -19,8 +19,7 @@ export function DreamForm({
   )
   const [targetDate, setTargetDate] = useState(dream?.targetDate ?? '')
   const [error, setError] = useState('')
-  const field =
-    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base'
+  const field = 'form-control'
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -36,26 +35,41 @@ export function DreamForm({
   return (
     <form onSubmit={submit} className="space-y-4 p-5">
       <div>
-        <label className="mb-1.5 block text-sm font-medium">Dream title</label>
+        <label htmlFor="dream-title" className="form-label">
+          Dream title
+        </label>
         <input
+          id="dream-title"
+          name="dream-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          placeholder="A dream for us"
+          autoComplete="off"
           className={field}
         />
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-medium">Description</label>
+        <label htmlFor="dream-description" className="form-label">
+          Description
+        </label>
         <textarea
+          id="dream-description"
+          name="dream-description"
           rows={3}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
+          placeholder="What would make it special?"
           className={`${field} py-3`}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Category</label>
+          <label htmlFor="dream-category" className="form-label">
+            Category
+          </label>
           <select
+            id="dream-category"
+            name="dream-category"
             value={category}
             onChange={(event) =>
               setCategory(event.target.value as DreamCategory)
@@ -70,10 +84,12 @@ export function DreamForm({
           </select>
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">
+          <label htmlFor="dream-target-date" className="form-label">
             Target date
           </label>
           <input
+            id="dream-target-date"
+            name="dream-target-date"
             type="date"
             value={targetDate}
             onChange={(event) => setTargetDate(event.target.value)}

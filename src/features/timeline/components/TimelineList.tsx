@@ -25,7 +25,7 @@ export function TimelineList({
       <div className="mt-10 rounded-card border border-border bg-surface">
         <EmptyState
           title="Your story starts here"
-          description="Add the first moment you want to remember together."
+          description="Add your first memory."
           icon={<CalendarDays aria-hidden="true" className="size-5" />}
           action={<Button onClick={onAdd}>Add first memory</Button>}
         />

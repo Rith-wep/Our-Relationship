@@ -21,21 +21,30 @@ export function SpecialDateForm({
     if (!title.trim() || !value) return setError('Title and date are required.')
     onSave({ title: title.trim(), date: value, recurringAnnually: recurring })
   }
-  const field =
-    'min-h-11 w-full rounded-control border border-border-strong px-3.5 text-base'
+  const field = 'form-control'
   return (
     <form onSubmit={submit} className="space-y-4 p-5">
       <div>
-        <label className="mb-1.5 block text-sm font-medium">Date title</label>
+        <label htmlFor="special-date-title" className="form-label">
+          Date title
+        </label>
         <input
+          id="special-date-title"
+          name="special-date-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="Our anniversary"
+          autoComplete="off"
           className={field}
         />
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-medium">Date</label>
+        <label htmlFor="special-date-value" className="form-label">
+          Date
+        </label>
         <input
+          id="special-date-value"
+          name="special-date-value"
           type="date"
           value={value}
           onChange={(e) => setValue(e.target.value)}
