@@ -9,10 +9,12 @@ import { useMemories } from '@/app/providers/useMemories'
 import { Button } from '@/components/ui/Button'
 import { PageSkeleton } from '@/components/ui/PageSkeleton'
 import { applyBackgroundPreference } from '@/features/couple/backgrounds'
+import { useAuth } from '@/features/auth/useAuth'
 import { usePwa } from '@/features/pwa/usePwa'
 
 export function AppShell() {
   const location = useLocation()
+  const auth = useAuth()
   const couple = useCouple()
   const memories = useMemories()
   const letters = useLetters()
@@ -36,6 +38,13 @@ export function AppShell() {
     memories.realtimeState,
     letters.realtimeState,
   ].includes('reconnecting')
+  const unreadLetterCount = letters.letters.filter(
+    (letter) =>
+      letter.status === 'sent' &&
+      letter.recipientId === auth.user?.id &&
+      !letter.readAt &&
+      !letter.deletedAt,
+  ).length
 
   useEffect(() => {
     applyBackgroundPreference(couple.profile.background)
@@ -98,7 +107,7 @@ export function AppShell() {
           </div>
         </main>
 
-        <BottomNavigation />
+        <BottomNavigation unreadLetters={unreadLetterCount} />
       </div>
     </div>
   )
