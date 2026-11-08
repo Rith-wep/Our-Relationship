@@ -63,39 +63,58 @@ export async function loadCoupleData(
   coupleId: string,
   memberIds: string[],
 ): Promise<CoupleData> {
-  const [coupleValue, profilesValue, dreamsValue, datesValue, thinkingValue] =
-    await Promise.all([
-      supabase.from('couples').select('*').eq('id', coupleId).single(),
-      supabase.from('profiles').select('*').in('id', memberIds),
-      supabase.from('dreams').select('*').eq('couple_id', coupleId),
-      supabase.from('important_dates').select('*').eq('couple_id', coupleId),
-      supabase
-        .from('thinking_of_you')
-        .select('*')
-        .eq('couple_id', coupleId)
-        .order('created_at', { ascending: false })
-        .limit(1),
-    ])
+  const coupleRequest = Promise.resolve(
+    supabase.from('couples').select('*').eq('id', coupleId).single(),
+  )
+  const profilesRequest = Promise.resolve(
+    supabase.from('profiles').select('*').in('id', memberIds),
+  )
+  const dreamsRequest = Promise.resolve(
+    supabase.from('dreams').select('*').eq('couple_id', coupleId),
+  )
+  const datesRequest = Promise.resolve(
+    supabase.from('important_dates').select('*').eq('couple_id', coupleId),
+  )
+  const thinkingRequest = Promise.resolve(
+    supabase
+      .from('thinking_of_you')
+      .select('*')
+      .eq('couple_id', coupleId)
+      .order('created_at', { ascending: false })
+      .limit(1),
+  )
+
+  const [coupleValue, profilesValue] = await Promise.all([
+    coupleRequest,
+    profilesRequest,
+  ])
   const coupleResult = asServiceResult<CoupleRow>(coupleValue)
   const profilesResult = asServiceResult<ProfileRow[]>(profilesValue)
-  const dreamsResult = asServiceResult<DreamRow[]>(dreamsValue)
-  const datesResult = asServiceResult<ImportantDateRow[]>(datesValue)
-  const thinkingResult = asServiceResult<ThinkingOfYouRow[]>(thinkingValue)
   throwIfError(coupleResult.error)
   throwIfError(profilesResult.error)
-  throwIfError(dreamsResult.error)
-  throwIfError(datesResult.error)
-  throwIfError(thinkingResult.error)
   if (!coupleResult.data) throw new Error('Shared space was not found.')
 
-  const profiles = new Map(
-    (profilesResult.data ?? []).map((profile) => [profile.id, profile]),
-  )
-  const avatarUrls = await createSignedMediaUrls(
+  const avatarUrlsRequest = createSignedMediaUrls(
     (profilesResult.data ?? [])
       .map((profile) => profile.avatar_path)
       .filter((path): path is string => Boolean(path)),
     { cacheInSession: true },
+  )
+  const [dreamsValue, datesValue, thinkingValue, avatarUrls] =
+    await Promise.all([
+      dreamsRequest,
+      datesRequest,
+      thinkingRequest,
+      avatarUrlsRequest,
+    ])
+  const dreamsResult = asServiceResult<DreamRow[]>(dreamsValue)
+  const datesResult = asServiceResult<ImportantDateRow[]>(datesValue)
+  const thinkingResult = asServiceResult<ThinkingOfYouRow[]>(thinkingValue)
+  throwIfError(dreamsResult.error)
+  throwIfError(datesResult.error)
+  throwIfError(thinkingResult.error)
+  const profiles = new Map(
+    (profilesResult.data ?? []).map((profile) => [profile.id, profile]),
   )
   const partners = memberIds.slice(0, 2).map((id) => {
     const profile = profiles.get(id)
