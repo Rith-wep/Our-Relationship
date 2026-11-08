@@ -1,5 +1,5 @@
 import { WifiOff } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
 
@@ -67,49 +67,46 @@ export function AppShell() {
               Reconnecting sync…
             </div>
           ) : null}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={location.pathname}
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -3 }}
-              transition={{
-                duration: shouldReduceMotion ? 0 : 0.18,
-                ease: 'easeOut',
-              }}
-              className="mx-auto min-h-full w-full max-w-content"
-            >
-              {loading ? (
-                <PageSkeleton />
-              ) : error ? (
-                <div className="flex min-h-[70dvh] items-center justify-center">
-                  <div className="w-full rounded-card bg-card p-5 text-center shadow-soft">
-                    <h1 className="page-title-outlined text-xl font-semibold">
-                      We couldn’t load your data
-                    </h1>
-                    <p
-                      className="mt-2 text-sm leading-6 text-text-secondary"
-                      role="alert"
-                    >
-                      {error}
-                    </p>
-                    <Button
-                      className="mt-5"
-                      onClick={() => {
-                        void Promise.all(
-                          routeProviders.map((provider) => provider.retry()),
-                        )
-                      }}
-                    >
-                      Try again
-                    </Button>
-                  </div>
+          <motion.div
+            key={location.pathname}
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.12,
+              ease: 'easeOut',
+            }}
+            className="mx-auto min-h-full w-full max-w-content"
+          >
+            {loading ? (
+              <PageSkeleton />
+            ) : error ? (
+              <div className="flex min-h-[70dvh] items-center justify-center">
+                <div className="w-full rounded-card bg-card p-5 text-center shadow-soft">
+                  <h1 className="page-title-outlined text-xl font-semibold">
+                    We couldn’t load your data
+                  </h1>
+                  <p
+                    className="mt-2 text-sm leading-6 text-text-secondary"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                  <Button
+                    className="mt-5"
+                    onClick={() => {
+                      void Promise.all(
+                        routeProviders.map((provider) => provider.retry()),
+                      )
+                    }}
+                  >
+                    Try again
+                  </Button>
                 </div>
-              ) : (
-                <Outlet />
-              )}
-            </motion.div>
-          </AnimatePresence>
+              </div>
+            ) : (
+              <Outlet />
+            )}
+          </motion.div>
         </main>
 
         <BottomNavigation />
