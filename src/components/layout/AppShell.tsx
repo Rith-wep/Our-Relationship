@@ -17,8 +17,20 @@ export function AppShell() {
   const couple = useCouple()
   const memories = useMemories()
   const letters = useLetters()
-  const loading = couple.loading || memories.loading || letters.loading
-  const error = couple.error ?? memories.error ?? letters.error
+  const isLettersRoute = location.pathname.startsWith('/letters')
+  const isMemoriesRoute =
+    location.pathname.startsWith('/timeline') ||
+    location.pathname.startsWith('/memories')
+  const isCoupleRoute = location.pathname.startsWith('/us')
+  const routeProviders = isLettersRoute
+    ? [letters]
+    : isMemoriesRoute
+      ? [memories]
+      : isCoupleRoute
+        ? [couple]
+        : [couple, memories]
+  const loading = routeProviders.some((provider) => provider.loading)
+  const error = routeProviders.find((provider) => provider.error)?.error ?? null
   const reconnecting = [
     couple.realtimeState,
     memories.realtimeState,
@@ -84,11 +96,9 @@ export function AppShell() {
                     <Button
                       className="mt-5"
                       onClick={() => {
-                        void Promise.all([
-                          couple.retry(),
-                          memories.retry(),
-                          letters.retry(),
-                        ])
+                        void Promise.all(
+                          routeProviders.map((provider) => provider.retry()),
+                        )
                       }}
                     >
                       Try again
