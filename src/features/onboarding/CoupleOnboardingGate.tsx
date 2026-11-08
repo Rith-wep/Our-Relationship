@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 
-import { PageSkeleton } from '@/components/ui/PageSkeleton'
+import { AppLaunchScreen } from '@/components/layout/AppLaunchScreen'
 import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 
 export function CoupleOnboardingGate() {
@@ -11,7 +11,7 @@ export function CoupleOnboardingGate() {
     location.pathname.startsWith('/join/')
 
   if (session.loading) {
-    return <PageSkeleton fullscreen />
+    return <AppLaunchScreen />
   }
 
   if (session.error) {

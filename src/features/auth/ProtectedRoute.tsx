@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 
-import { PageSkeleton } from '@/components/ui/PageSkeleton'
+import { AppLaunchScreen } from '@/components/layout/AppLaunchScreen'
 import { useAuth } from '@/features/auth/useAuth'
 
 export function ProtectedRoute() {
@@ -8,7 +8,7 @@ export function ProtectedRoute() {
   const location = useLocation()
 
   if (auth.loading) {
-    return <PageSkeleton fullscreen />
+    return <AppLaunchScreen />
   }
 
   if (!auth.session) {
