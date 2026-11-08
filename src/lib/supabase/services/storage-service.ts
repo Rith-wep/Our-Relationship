@@ -23,6 +23,7 @@ const extensions: Record<string, string> = {
 const signedUrlLifetimeSeconds = 3600
 const signedUrlCacheLifetimeMs = 55 * 60 * 1000
 const signedUrlCacheLimit = 500
+const profileUrlSessionKey = 'our-little-universe-profile-urls'
 
 interface SignedUrlCacheEntry {
   url: string
@@ -30,6 +31,39 @@ interface SignedUrlCacheEntry {
 }
 
 const signedUrlCache = new Map<string, SignedUrlCacheEntry>()
+const sessionCachedPaths = new Set<string>()
+let profileSessionCacheLoaded = false
+
+function restoreProfileUrlSessionCache() {
+  if (profileSessionCacheLoaded) return
+  profileSessionCacheLoaded = true
+  try {
+    const value = window.sessionStorage.getItem(profileUrlSessionKey)
+    if (!value) return
+    const entries = JSON.parse(value) as Record<string, SignedUrlCacheEntry>
+    const now = Date.now()
+    for (const [path, entry] of Object.entries(entries)) {
+      if (!entry.url || entry.expiresAt <= now) continue
+      signedUrlCache.set(path, entry)
+      sessionCachedPaths.add(path)
+    }
+  } catch {
+    // Ignore malformed or unavailable session storage.
+  }
+}
+
+function persistProfileUrlSessionCache() {
+  try {
+    const entries: Record<string, SignedUrlCacheEntry> = {}
+    for (const path of sessionCachedPaths) {
+      const entry = signedUrlCache.get(path)
+      if (entry) entries[path] = entry
+    }
+    window.sessionStorage.setItem(profileUrlSessionKey, JSON.stringify(entries))
+  } catch {
+    // Session storage can be unavailable in restricted browsing modes.
+  }
+}
 
 function trimSignedUrlCache() {
   while (signedUrlCache.size > signedUrlCacheLimit) {
@@ -41,6 +75,13 @@ function trimSignedUrlCache() {
 
 export function clearSignedMediaUrlCache() {
   signedUrlCache.clear()
+  sessionCachedPaths.clear()
+  profileSessionCacheLoaded = false
+  try {
+    window.sessionStorage.removeItem(profileUrlSessionKey)
+  } catch {
+    // Nothing to clear when browser storage is unavailable.
+  }
 }
 
 export type UploadProgress = (progress: number) => void
@@ -132,10 +173,18 @@ export async function removeMediaObjects(paths: string[]) {
   if (paths.length === 0) return
   const { error } = await supabase.storage.from(mediaBucket).remove(paths)
   if (error) throw new Error(error.message)
-  for (const path of paths) signedUrlCache.delete(path)
+  for (const path of paths) {
+    signedUrlCache.delete(path)
+    sessionCachedPaths.delete(path)
+  }
+  persistProfileUrlSessionCache()
 }
 
-export async function createSignedMediaUrls(paths: string[]) {
+export async function createSignedMediaUrls(
+  paths: string[],
+  options: { cacheInSession?: boolean } = {},
+) {
+  if (options.cacheInSession) restoreProfileUrlSessionCache()
   const uniquePaths = [...new Set(paths.filter(Boolean))]
   const urls = new Map<string, string>()
   if (uniquePaths.length === 0) return urls
@@ -163,8 +212,10 @@ export async function createSignedMediaUrls(paths: string[]) {
       if (!item.path || !item.signedUrl) continue
       signedUrlCache.set(item.path, { url: item.signedUrl, expiresAt })
       urls.set(item.path, item.signedUrl)
+      if (options.cacheInSession) sessionCachedPaths.add(item.path)
     }
     trimSignedUrlCache()
+    if (options.cacheInSession) persistProfileUrlSessionCache()
   }
 
   return urls

@@ -95,6 +95,7 @@ export async function loadCoupleData(
     (profilesResult.data ?? [])
       .map((profile) => profile.avatar_path)
       .filter((path): path is string => Boolean(path)),
+    { cacheInSession: true },
   )
   const partners = memberIds.slice(0, 2).map((id) => {
     const profile = profiles.get(id)
