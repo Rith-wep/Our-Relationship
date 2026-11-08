@@ -78,7 +78,7 @@ export function DreamsList({
           return (
             <article
               key={dream.id}
-              className={`rounded-card border p-4 shadow-soft ${dream.completed ? 'border-border bg-surface' : 'border-border bg-white'}`}
+              className={`rounded-card border p-4 shadow-soft ${dream.completed ? 'border-border bg-surface' : 'border-border bg-card'}`}
             >
               <div className="flex gap-3">
                 <button

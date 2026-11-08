@@ -42,7 +42,7 @@ export function ImportantDates({
         {upcoming.map(({ item, next }) => (
           <article
             key={item.id}
-            className="flex items-center gap-3 rounded-card border border-border bg-white p-4 shadow-soft"
+            className="flex items-center gap-3 rounded-card border border-border bg-card p-4 shadow-soft"
           >
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
               <CalendarHeart className="size-5" />
