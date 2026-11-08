@@ -32,6 +32,7 @@ export function CoupleProfile({
                 <img
                   src={partner.photo}
                   alt={`${partner.name} profile`}
+                  decoding="async"
                   className="size-full object-cover"
                 />
               ) : (

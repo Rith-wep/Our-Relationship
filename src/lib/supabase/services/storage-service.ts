@@ -93,6 +93,46 @@ export interface ValidatedMedia {
   extension: string
 }
 
+async function optimizeProfileImage(file: File) {
+  if (file.type === 'image/gif') return file
+
+  const objectUrl = URL.createObjectURL(file)
+  try {
+    const image = new Image()
+    image.decoding = 'async'
+    image.src = objectUrl
+    await image.decode()
+
+    const maxEdge = 720
+    const scale = Math.min(1, maxEdge / Math.max(image.width, image.height))
+    if (scale === 1 && file.size <= 600 * 1024) return file
+
+    const width = Math.max(1, Math.round(image.width * scale))
+    const height = Math.max(1, Math.round(image.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')
+    if (!context) return file
+    context.drawImage(image, 0, 0, width, height)
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/webp', 0.82)
+    })
+    if (!blob || blob.size >= file.size) return file
+
+    const baseName = file.name.replace(/\.[^.]+$/, '') || 'profile-photo'
+    return new File([blob], `${baseName}.webp`, {
+      type: 'image/webp',
+      lastModified: Date.now(),
+    })
+  } catch {
+    return file
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
 export function validateMemoryFile(file: File): ValidatedMedia {
   const mediaType = imageTypes.has(file.type)
     ? 'image'
@@ -163,9 +203,12 @@ export async function uploadProfileObject(
   file: File,
   progress?: UploadProgress,
 ) {
-  const metadata = validateProfileFile(file)
+  validateProfileFile(file)
+  progress?.(5)
+  const optimizedFile = await optimizeProfileImage(file)
+  const metadata = validateProfileFile(optimizedFile)
   const path = `${coupleId}/profiles/${userId}/${crypto.randomUUID()}.${metadata.extension}`
-  await uploadObject(path, file, progress)
+  await uploadObject(path, optimizedFile, progress)
   return { path, ...metadata }
 }
 

@@ -68,6 +68,8 @@ export function HomePage() {
                 <img
                   src={partner.photo}
                   alt=""
+                  decoding="async"
+                  fetchPriority="high"
                   className="size-full rounded-full object-cover"
                 />
               ) : (
