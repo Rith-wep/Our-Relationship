@@ -37,6 +37,7 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
     window.location.pathname.startsWith('/timeline') ||
     window.location.pathname.startsWith('/memories')
   const fullDataRef = useRef(startsOnFullMemoryRoute)
+  const pendingRefreshRef = useRef<Promise<void> | null>(null)
   const [fullyLoaded, setFullyLoaded] = useState(startsOnFullMemoryRoute)
   const memberNames = useMemo(
     () =>
@@ -50,29 +51,41 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
   )
 
   const retry = useCallback(
-    async (showLoading = true) => {
-      if (!session.couple) {
-        setMemories([])
-        setLoading(false)
-        return
-      }
-      if (showLoading) setLoading(true)
-      setError(null)
-      try {
-        setMemories(
-          await loadMemories(
-            session.couple.coupleId,
-            memberNames,
-            fullDataRef.current ? undefined : { activeOnly: true, limit: 3 },
-          ),
-        )
-      } catch (caught) {
-        setError(
-          caught instanceof Error ? caught.message : 'Unable to load memories.',
-        )
-      } finally {
-        if (showLoading) setLoading(false)
-      }
+    (showLoading = true) => {
+      if (pendingRefreshRef.current) return pendingRefreshRef.current
+      const request = (async () => {
+        if (!session.couple) {
+          setMemories([])
+          setLoading(false)
+          return
+        }
+        if (showLoading) setLoading(true)
+        setError(null)
+        try {
+          setMemories(
+            await loadMemories(
+              session.couple.coupleId,
+              memberNames,
+              fullDataRef.current ? undefined : { activeOnly: true, limit: 3 },
+            ),
+          )
+        } catch (caught) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : 'Unable to load memories.',
+          )
+        } finally {
+          if (showLoading) setLoading(false)
+        }
+      })()
+      pendingRefreshRef.current = request
+      void request.finally(() => {
+        if (pendingRefreshRef.current === request) {
+          pendingRefreshRef.current = null
+        }
+      })
+      return request
     },
     [memberNames, session.couple],
   )

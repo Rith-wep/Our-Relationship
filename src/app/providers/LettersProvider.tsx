@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -31,6 +32,7 @@ export function LettersProvider({ children }: { children: ReactNode }) {
   const [letters, setLetters] = useState<LoveLetter[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const pendingRefreshRef = useRef<Promise<void> | null>(null)
   const memberNames = useMemo(
     () =>
       new Map(
@@ -43,25 +45,41 @@ export function LettersProvider({ children }: { children: ReactNode }) {
   )
 
   const retry = useCallback(
-    async (showLoading = true) => {
-      if (!session.couple || !auth.user) {
-        setLetters([])
-        setLoading(false)
-        return
-      }
-      if (showLoading) setLoading(true)
-      setError(null)
-      try {
-        setLetters(
-          await loadLetters(session.couple.coupleId, auth.user.id, memberNames),
-        )
-      } catch (caught) {
-        setError(
-          caught instanceof Error ? caught.message : 'Unable to load letters.',
-        )
-      } finally {
-        if (showLoading) setLoading(false)
-      }
+    (showLoading = true) => {
+      if (pendingRefreshRef.current) return pendingRefreshRef.current
+      const request = (async () => {
+        if (!session.couple || !auth.user) {
+          setLetters([])
+          setLoading(false)
+          return
+        }
+        if (showLoading) setLoading(true)
+        setError(null)
+        try {
+          setLetters(
+            await loadLetters(
+              session.couple.coupleId,
+              auth.user.id,
+              memberNames,
+            ),
+          )
+        } catch (caught) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : 'Unable to load letters.',
+          )
+        } finally {
+          if (showLoading) setLoading(false)
+        }
+      })()
+      pendingRefreshRef.current = request
+      void request.finally(() => {
+        if (pendingRefreshRef.current === request) {
+          pendingRefreshRef.current = null
+        }
+      })
+      return request
     },
     [auth.user, memberNames, session.couple],
   )

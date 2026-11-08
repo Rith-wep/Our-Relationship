@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -60,37 +61,48 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoUploadProgress, setPhotoUploadProgress] = useState(0)
+  const pendingRefreshRef = useRef<Promise<void> | null>(null)
 
   const retry = useCallback(
-    async (showLoading = true) => {
-      if (!session.couple) {
-        setProfile(emptyProfile)
-        setDreams([])
-        setImportantDates([])
-        setLatestThinkingOfYou(null)
-        setLoading(false)
-        return
-      }
-      if (showLoading) setLoading(true)
-      setError(null)
-      try {
-        const data = await loadCoupleData(
-          session.couple.coupleId,
-          session.couple.members.map((member) => member.userId),
-        )
-        setProfile(data.profile)
-        setDreams(data.dreams)
-        setImportantDates(data.importantDates)
-        setLatestThinkingOfYou(data.latestThinkingOfYou)
-      } catch (caught) {
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : 'Unable to load relationship data.',
-        )
-      } finally {
-        if (showLoading) setLoading(false)
-      }
+    (showLoading = true) => {
+      if (pendingRefreshRef.current) return pendingRefreshRef.current
+      const request = (async () => {
+        if (!session.couple) {
+          setProfile(emptyProfile)
+          setDreams([])
+          setImportantDates([])
+          setLatestThinkingOfYou(null)
+          setLoading(false)
+          return
+        }
+        if (showLoading) setLoading(true)
+        setError(null)
+        try {
+          const data = await loadCoupleData(
+            session.couple.coupleId,
+            session.couple.members.map((member) => member.userId),
+          )
+          setProfile(data.profile)
+          setDreams(data.dreams)
+          setImportantDates(data.importantDates)
+          setLatestThinkingOfYou(data.latestThinkingOfYou)
+        } catch (caught) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : 'Unable to load relationship data.',
+          )
+        } finally {
+          if (showLoading) setLoading(false)
+        }
+      })()
+      pendingRefreshRef.current = request
+      void request.finally(() => {
+        if (pendingRefreshRef.current === request) {
+          pendingRefreshRef.current = null
+        }
+      })
+      return request
     },
     [session.couple],
   )
