@@ -53,7 +53,12 @@ export function MemoryDialog({
   const descriptionId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
+  const onCloseRef = useRef(onClose)
   const shouldReduceMotion = useReducedMotion()
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     if (!open) return
@@ -69,7 +74,7 @@ export function MemoryDialog({
     })
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
     }
 
     document.addEventListener('keydown', handleEscape)
@@ -80,7 +85,7 @@ export function MemoryDialog({
       document.removeEventListener('keydown', handleEscape)
       returnFocusRef.current?.focus()
     }
-  }, [onClose, open])
+  }, [open])
 
   const handleFocusTrap = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Tab') return
