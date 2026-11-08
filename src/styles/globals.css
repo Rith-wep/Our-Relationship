@@ -159,6 +159,21 @@
 }
 
 @layer components {
+  @keyframes route-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .route-enter {
+    animation: route-enter 120ms ease-out;
+  }
+
   .form-control {
     min-height: 2.875rem;
     width: 100%;

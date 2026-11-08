@@ -1,5 +1,4 @@
 import { WifiOff } from 'lucide-react'
-import { motion, useReducedMotion } from 'motion/react'
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
 
@@ -14,7 +13,6 @@ import { usePwa } from '@/features/pwa/usePwa'
 
 export function AppShell() {
   const location = useLocation()
-  const shouldReduceMotion = useReducedMotion()
   const couple = useCouple()
   const memories = useMemories()
   const letters = useLetters()
@@ -59,15 +57,9 @@ export function AppShell() {
               Reconnecting sync…
             </div>
           ) : null}
-          <motion.div
+          <div
             key={location.pathname}
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.12,
-              ease: 'easeOut',
-            }}
-            className="mx-auto min-h-full w-full max-w-content"
+            className="route-enter mx-auto min-h-full w-full max-w-content"
           >
             {loading ? (
               <PageSkeleton />
@@ -103,7 +95,7 @@ export function AppShell() {
             ) : (
               <Outlet />
             )}
-          </motion.div>
+          </div>
         </main>
 
         <BottomNavigation />

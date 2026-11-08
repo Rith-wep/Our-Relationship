@@ -1,13 +1,9 @@
-import { motion, useReducedMotion } from 'motion/react'
 import type { ComponentProps, ReactNode } from 'react'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost'
 type ButtonSize = 'sm' | 'md'
 
-interface ButtonProps extends Omit<
-  ComponentProps<typeof motion.button>,
-  'children'
-> {
+interface ButtonProps extends Omit<ComponentProps<'button'>, 'children'> {
   children: ReactNode
   variant?: ButtonVariant
   size?: ButtonSize
@@ -38,17 +34,13 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const shouldReduceMotion = useReducedMotion()
-
   return (
-    <motion.button
+    <button
       type={type}
       disabled={disabled}
-      whileTap={shouldReduceMotion || disabled ? undefined : { scale: 0.98 }}
-      transition={{ duration: 0.1 }}
       className={[
         'inline-flex items-center justify-center gap-2 rounded-control font-semibold',
-        'transition-colors duration-150 motion-reduce:transition-none',
+        'transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98] motion-reduce:transition-none',
         'disabled:pointer-events-none disabled:opacity-50',
         variantStyles[variant],
         sizeStyles[size],
@@ -58,6 +50,6 @@ export function Button({
       {...props}
     >
       {children}
-    </motion.button>
+    </button>
   )
 }
