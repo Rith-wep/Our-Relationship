@@ -51,6 +51,30 @@ const emptyProfile: CoupleProfile = {
   background: { preset: 'default' },
 }
 
+function profileFromSession(
+  couple: NonNullable<ReturnType<typeof useCoupleSession>['couple']>,
+): CoupleProfile {
+  const partners = couple.members.slice(0, 2).map((member) => ({
+    id: member.userId,
+    name: member.displayName,
+    initial: member.displayName.charAt(0).toUpperCase() || '?',
+  }))
+  while (partners.length < 2) {
+    partners.push({
+      id: '',
+      name: 'Waiting for partner',
+      initial: '?',
+    })
+  }
+  return {
+    partners: [partners[0], partners[1]],
+    relationshipStartDate: couple.relationshipStartDate ?? '',
+    description: couple.description,
+    nextTimeTogether: '',
+    background: { preset: 'default' },
+  }
+}
+
 export function CoupleProvider({ children }: { children: ReactNode }) {
   const auth = useAuth()
   const session = useCoupleSession()
@@ -64,6 +88,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoUploadProgress, setPhotoUploadProgress] = useState(0)
   const pendingRefreshRef = useRef<Promise<void> | null>(null)
+  const bootstrapKeyRef = useRef<string | null>(null)
 
   const retry = useCallback(
     (showLoading = true) => {
@@ -110,9 +135,27 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => void retry(), 0)
+    const couple = session.couple
+    if (!couple) {
+      bootstrapKeyRef.current = null
+      const timeout = window.setTimeout(() => void retry(false), 0)
+      return () => window.clearTimeout(timeout)
+    }
+
+    const bootstrapKey = `${couple.coupleId}:${auth.user?.id ?? ''}`
+    if (bootstrapKeyRef.current !== bootstrapKey) {
+      bootstrapKeyRef.current = bootstrapKey
+      setProfile(profileFromSession(couple))
+      setDreams([])
+      setImportantDates([])
+      setLatestThinkingOfYou(null)
+      setError(null)
+      setLoading(false)
+    }
+
+    const timeout = window.setTimeout(() => void retry(false), 0)
     return () => window.clearTimeout(timeout)
-  }, [retry])
+  }, [auth.user?.id, retry, session.couple])
 
   const realtimeTargets = useMemo(() => {
     if (!session.couple) return []
