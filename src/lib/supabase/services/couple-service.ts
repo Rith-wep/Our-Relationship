@@ -1,5 +1,6 @@
 import type {
   BackgroundPreference,
+  ConnectionSettingsDraft,
   CoupleProfile,
   Dream,
   DreamDraft,
@@ -230,6 +231,31 @@ export async function updateCoupleProfile(input: {
   ])
   throwIfError(asServiceResult<null>(coupleValue).error)
   throwIfError(asServiceResult<null>(profileValue).error)
+}
+
+export async function updateConnectionSettings(input: {
+  coupleId: string
+  userId: string
+  settings: ConnectionSettingsDraft
+}) {
+  const [profileValue, coupleValue] = await Promise.all([
+    supabase
+      .from('profiles')
+      .update({
+        city: input.settings.city.trim() || null,
+        country: input.settings.country.trim() || null,
+        timezone: input.settings.timezone.trim() || null,
+      })
+      .eq('id', input.userId),
+    supabase
+      .from('couples')
+      .update({
+        next_time_together: input.settings.nextTimeTogether || null,
+      })
+      .eq('id', input.coupleId),
+  ])
+  throwIfError(asServiceResult<null>(profileValue).error)
+  throwIfError(asServiceResult<null>(coupleValue).error)
 }
 
 export async function updateCoupleBackground(

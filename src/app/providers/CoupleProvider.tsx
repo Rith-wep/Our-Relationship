@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/features/auth/useAuth'
 import type {
   BackgroundPreference,
+  ConnectionSettingsDraft,
   CoupleProfile,
   Dream,
   DreamDraft,
@@ -31,8 +32,9 @@ import {
   loadCoupleData,
   removeProfilePhotoRecord,
   replaceProfilePhoto,
-  updateCoupleProfile,
+  updateConnectionSettings,
   updateCoupleBackground,
+  updateCoupleProfile,
   updateDateRecord,
   updateDreamRecord,
 } from '@/lib/supabase/services/couple-service'
@@ -166,6 +168,29 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
         await session.refresh()
       }),
     [auth.user, runMutation, session],
+  )
+
+  const updateConnection = useCallback(
+    async (settings: ConnectionSettingsDraft) => {
+      setError(null)
+      try {
+        if (!session.couple || !auth.user) throw new Error('Not signed in.')
+        await updateConnectionSettings({
+          coupleId: session.couple.coupleId,
+          userId: auth.user.id,
+          settings,
+        })
+        await retry(false)
+      } catch (caught) {
+        const message =
+          caught instanceof Error
+            ? caught.message
+            : 'Connection settings update failed.'
+        setError(message)
+        throw new Error(message, { cause: caught })
+      }
+    },
+    [auth.user, retry, session.couple],
   )
 
   const updateBackground = useCallback(
@@ -309,6 +334,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
       realtimeState,
       retry,
       updateProfile,
+      updateConnection,
       updateBackground,
       uploadProfilePhoto,
       removeProfilePhoto,
@@ -339,6 +365,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
       retry,
       toggleDream,
       updateDream,
+      updateConnection,
       updateProfile,
       updateBackground,
       uploadProfilePhoto,

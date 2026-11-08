@@ -2,6 +2,7 @@ import { createContext } from 'react'
 
 import type {
   BackgroundPreference,
+  ConnectionSettingsDraft,
   CoupleProfile,
   Dream,
   DreamDraft,
@@ -23,6 +24,7 @@ export interface CoupleContextValue {
   realtimeState: RealtimeState
   retry: () => Promise<void>
   updateProfile: (profile: CoupleProfile) => Promise<void>
+  updateConnection: (settings: ConnectionSettingsDraft) => Promise<void>
   updateBackground: (preference: BackgroundPreference) => Promise<void>
   uploadProfilePhoto: (file: File) => Promise<void>
   removeProfilePhoto: () => Promise<void>

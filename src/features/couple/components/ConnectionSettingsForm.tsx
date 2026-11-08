@@ -1,7 +1,10 @@
 import { type FormEvent, useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/Button'
-import type { CoupleProfile } from '@/features/couple/types'
+import type {
+  ConnectionSettingsDraft,
+  CoupleProfile,
+} from '@/features/couple/types'
 
 export function ConnectionSettingsForm({
   profile,
@@ -12,7 +15,7 @@ export function ConnectionSettingsForm({
   profile: CoupleProfile
   userId: string
   onCancel: () => void
-  onSave: (profile: CoupleProfile) => void
+  onSave: (settings: ConnectionSettingsDraft) => Promise<void>
 }) {
   const current = profile.partners.find((partner) => partner.id === userId)
   const [city, setCity] = useState(current?.city ?? '')
@@ -21,29 +24,38 @@ export function ConnectionSettingsForm({
   const [nextTimeTogether, setNextTimeTogether] = useState(
     profile.nextTimeTogether,
   )
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const timezones = useMemo(() => {
     const supported = Intl.supportedValuesOf('timeZone')
     const device = Intl.DateTimeFormat().resolvedOptions().timeZone
     return [device, ...supported.filter((item) => item !== device)]
   }, [])
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault()
-    const partners = profile.partners.map((partner) =>
-      partner.id === userId
-        ? {
-            ...partner,
-            city: city.trim() || undefined,
-            country: country.trim() || undefined,
-            timezone: timezone || undefined,
-          }
-        : partner,
-    ) as CoupleProfile['partners']
-    onSave({ ...profile, partners, nextTimeTogether })
+    if (saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave({
+        city: city.trim(),
+        country: country.trim(),
+        timezone,
+        nextTimeTogether,
+      })
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to save.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
-    <form onSubmit={submit} className="flex max-h-[calc(90dvh-5rem)] flex-col">
+    <form
+      onSubmit={(event) => void submit(event)}
+      className="flex max-h-[calc(90dvh-5rem)] flex-col"
+    >
       <div className="space-y-5 overflow-y-auto p-5">
         <div className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2">
           <div>
@@ -109,13 +121,23 @@ export function ConnectionSettingsForm({
           Only city, country, and timezone are shared. Precise location is never
           collected.
         </p>
+        {error ? (
+          <p className="text-sm font-medium text-primary-strong" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
       <div className="flex gap-3 border-t border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <Button variant="secondary" fullWidth onClick={onCancel}>
+        <Button
+          variant="secondary"
+          fullWidth
+          disabled={saving}
+          onClick={onCancel}
+        >
           Cancel
         </Button>
-        <Button type="submit" fullWidth>
-          Save
+        <Button type="submit" fullWidth disabled={saving}>
+          {saving ? 'Saving…' : 'Save'}
         </Button>
       </div>
     </form>

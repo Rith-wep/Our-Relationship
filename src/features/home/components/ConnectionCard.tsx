@@ -101,7 +101,11 @@ export function ConnectionCard({
       </h2>
       <div className="mt-3 overflow-hidden rounded-card border border-border bg-card shadow-soft">
         {configuredPartners.length > 0 ? (
-          <div className="grid grid-cols-2 gap-px bg-border">
+          <div
+            className={`grid gap-px bg-border ${
+              configuredPartners.length > 1 ? 'grid-cols-2' : 'grid-cols-1'
+            }`}
+          >
             {configuredPartners.map((partner) => (
               <div key={partner.id} className="bg-card p-4">
                 <p className="truncate text-sm font-semibold">{partner.name}</p>

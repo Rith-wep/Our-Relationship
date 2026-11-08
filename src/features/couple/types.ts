@@ -31,6 +31,13 @@ export interface CoupleProfile {
   background: BackgroundPreference
 }
 
+export interface ConnectionSettingsDraft {
+  city: string
+  country: string
+  timezone: string
+  nextTimeTogether: string
+}
+
 export interface ThinkingOfYou {
   id: string
   senderId: string

@@ -134,8 +134,8 @@ export function CouplePage() {
           profile={couple.profile}
           userId={auth.user?.id ?? ''}
           onCancel={() => setEditConnection(false)}
-          onSave={(profile) => {
-            void couple.updateProfile(profile)
+          onSave={async (settings) => {
+            await couple.updateConnection(settings)
             setEditConnection(false)
           }}
         />
