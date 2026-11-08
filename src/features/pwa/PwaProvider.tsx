@@ -2,6 +2,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { PwaContext } from '@/features/pwa/pwa-context'
+import { OfflineBanner } from '@/features/pwa/OfflineBanner'
 import { PwaUpdatePrompt } from '@/features/pwa/PwaUpdatePrompt'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -22,6 +23,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(isStandalone)
+  const [online, setOnline] = useState(() => window.navigator.onLine)
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -45,10 +47,22 @@ export function PwaProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    const markOnline = () => setOnline(true)
+    const markOffline = () => setOnline(false)
+    window.addEventListener('online', markOnline)
+    window.addEventListener('offline', markOffline)
+    return () => {
+      window.removeEventListener('online', markOnline)
+      window.removeEventListener('offline', markOffline)
+    }
+  }, [])
+
   const value = useMemo(
     () => ({
       canInstall: Boolean(installPrompt) && !installed,
       isInstalled: installed,
+      isOnline: online,
       install: async () => {
         if (!installPrompt) return false
         await installPrompt.prompt()
@@ -58,12 +72,13 @@ export function PwaProvider({ children }: { children: ReactNode }) {
         return choice.outcome === 'accepted'
       },
     }),
-    [installPrompt, installed],
+    [installPrompt, installed, online],
   )
 
   return (
     <PwaContext value={value}>
       {children}
+      <OfflineBanner visible={!online} />
       <PwaUpdatePrompt
         open={needRefresh}
         onLater={() => setNeedRefresh(false)}

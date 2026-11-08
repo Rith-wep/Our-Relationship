@@ -10,6 +10,7 @@ import { useMemories } from '@/app/providers/useMemories'
 import { Button } from '@/components/ui/Button'
 import { PageSkeleton } from '@/components/ui/PageSkeleton'
 import { applyBackgroundPreference } from '@/features/couple/backgrounds'
+import { usePwa } from '@/features/pwa/usePwa'
 
 export function AppShell() {
   const location = useLocation()
@@ -17,6 +18,7 @@ export function AppShell() {
   const couple = useCouple()
   const memories = useMemories()
   const letters = useLetters()
+  const pwa = usePwa()
   const isLettersRoute = location.pathname.startsWith('/letters')
   const isMemoriesRoute =
     location.pathname.startsWith('/timeline') ||
@@ -58,7 +60,7 @@ export function AppShell() {
           id="main-content"
           className="h-full overflow-x-hidden overflow-y-auto overscroll-y-contain px-5 pt-app-safe pb-app-nav [scrollbar-gutter:stable]"
         >
-          {reconnecting ? (
+          {reconnecting && pwa.isOnline ? (
             <div
               className="sticky top-0 z-20 mb-3 flex min-h-10 items-center justify-center gap-2 rounded-control bg-primary-soft px-3 text-xs font-semibold text-primary-strong shadow-soft"
               role="status"
@@ -83,16 +85,21 @@ export function AppShell() {
               <div className="flex min-h-[70dvh] items-center justify-center">
                 <div className="w-full rounded-card bg-card p-5 text-center shadow-soft">
                   <h1 className="page-title-outlined text-xl font-semibold">
-                    We couldn’t load your data
+                    {pwa.isOnline
+                      ? 'We couldn’t load your data'
+                      : 'You’re offline'}
                   </h1>
                   <p
                     className="mt-2 text-sm leading-6 text-text-secondary"
                     role="alert"
                   >
-                    {error}
+                    {pwa.isOnline
+                      ? error
+                      : 'Reconnect to load your private data.'}
                   </p>
                   <Button
                     className="mt-5"
+                    disabled={!pwa.isOnline}
                     onClick={() => {
                       void Promise.all(
                         routeProviders.map((provider) => provider.retry()),
