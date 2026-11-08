@@ -20,6 +20,29 @@ const extensions: Record<string, string> = {
   'video/webm': 'webm',
 }
 
+const signedUrlLifetimeSeconds = 3600
+const signedUrlCacheLifetimeMs = 55 * 60 * 1000
+const signedUrlCacheLimit = 500
+
+interface SignedUrlCacheEntry {
+  url: string
+  expiresAt: number
+}
+
+const signedUrlCache = new Map<string, SignedUrlCacheEntry>()
+
+function trimSignedUrlCache() {
+  while (signedUrlCache.size > signedUrlCacheLimit) {
+    const oldestPath = signedUrlCache.keys().next().value
+    if (!oldestPath) return
+    signedUrlCache.delete(oldestPath)
+  }
+}
+
+export function clearSignedMediaUrlCache() {
+  signedUrlCache.clear()
+}
+
 export type UploadProgress = (progress: number) => void
 
 export interface ValidatedMedia {
@@ -109,17 +132,40 @@ export async function removeMediaObjects(paths: string[]) {
   if (paths.length === 0) return
   const { error } = await supabase.storage.from(mediaBucket).remove(paths)
   if (error) throw new Error(error.message)
+  for (const path of paths) signedUrlCache.delete(path)
 }
 
 export async function createSignedMediaUrls(paths: string[]) {
-  if (paths.length === 0) return new Map<string, string>()
-  const { data, error } = await supabase.storage
-    .from(mediaBucket)
-    .createSignedUrls(paths, 3600)
-  if (error) throw new Error(error.message)
+  const uniquePaths = [...new Set(paths.filter(Boolean))]
   const urls = new Map<string, string>()
-  for (const item of data ?? []) {
-    if (item.path && item.signedUrl) urls.set(item.path, item.signedUrl)
+  if (uniquePaths.length === 0) return urls
+
+  const now = Date.now()
+  const missingPaths: string[] = []
+  for (const path of uniquePaths) {
+    const cached = signedUrlCache.get(path)
+    if (cached && cached.expiresAt > now) {
+      urls.set(path, cached.url)
+    } else {
+      signedUrlCache.delete(path)
+      missingPaths.push(path)
+    }
   }
+
+  if (missingPaths.length > 0) {
+    const { data, error } = await supabase.storage
+      .from(mediaBucket)
+      .createSignedUrls(missingPaths, signedUrlLifetimeSeconds)
+    if (error) throw new Error(error.message)
+
+    const expiresAt = now + signedUrlCacheLifetimeMs
+    for (const item of data ?? []) {
+      if (!item.path || !item.signedUrl) continue
+      signedUrlCache.set(item.path, { url: item.signedUrl, expiresAt })
+      urls.set(item.path, item.signedUrl)
+    }
+    trimSignedUrlCache()
+  }
+
   return urls
 }

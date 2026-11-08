@@ -13,6 +13,7 @@ import {
 } from '@/features/auth/auth-context'
 import { getFriendlyAuthError } from '@/features/auth/auth-errors'
 import { supabase } from '@/lib/supabase/client'
+import { clearSignedMediaUrlCache } from '@/lib/supabase/services/storage-service'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!active) return
+      if (!nextSession) clearSignedMediaUrlCache()
       setSession(nextSession)
       setLoading(false)
     })
