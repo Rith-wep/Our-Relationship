@@ -291,7 +291,11 @@
   background-color: #95878f;
 }
 
-:root[data-theme='light'][data-app-background-dark='true'] .keep-white-surface {
-  background-color: #ffffff;
-  color: #1f2937;
+.keep-white-surface {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.keep-white-surface:hover {
+  background-color: #f9fafb !important;
 }

@@ -1,14 +1,16 @@
-import { Check, ChevronDown, ImagePlus, Trash2 } from 'lucide-react'
+import { Check, ChevronDown, ImagePlus, Trash2, X } from 'lucide-react'
 import {
   type FormEvent,
   type KeyboardEvent,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
 } from 'react'
 
 import { Button } from '@/components/ui/Button'
+import { validateMemoryFile } from '@/lib/supabase/services/storage-service'
 import {
   milestoneTypes,
   type MemoryDraft,
@@ -41,6 +43,10 @@ const milestoneLabels: Record<MilestoneType, string> = {
 
 const inputStyles = 'form-control'
 
+function formatFileSize(bytes: number) {
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
 export function MemoryForm({
   memory,
   onCancel,
@@ -61,6 +67,17 @@ export function MemoryForm({
   const [mediaError, setMediaError] = useState('')
   const [milestoneOpen, setMilestoneOpen] = useState(false)
   const milestoneRef = useRef<HTMLDivElement>(null)
+  const mediaPreviewUrl = useMemo(
+    () => (mediaFile ? URL.createObjectURL(mediaFile) : undefined),
+    [mediaFile],
+  )
+
+  useEffect(
+    () => () => {
+      if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl)
+    },
+    [mediaPreviewUrl],
+  )
 
   useEffect(() => {
     if (!milestoneOpen) return
@@ -281,13 +298,58 @@ export function MemoryForm({
             Photo or video{' '}
             <span className="font-normal text-text-muted">(optional)</span>
           </label>
-          <label className="flex min-h-20 cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-4 hover:border-border-strong">
-            <ImagePlus aria-hidden="true" className="size-5 text-primary" />
-            <span className="min-w-0 text-sm text-text-secondary">
-              {mediaFile?.name ??
-                (memory?.media.length && !removeMedia
-                  ? 'Replace current media'
-                  : 'Choose a photo or video')}
+          {mediaPreviewUrl && mediaFile ? (
+            <div className="mb-3 overflow-hidden rounded-card border border-border bg-surface">
+              <div className="relative aspect-video bg-dark">
+                {mediaFile.type.startsWith('video/') ? (
+                  <video
+                    src={mediaPreviewUrl}
+                    className="size-full object-cover"
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={mediaPreviewUrl}
+                    alt="Selected memory preview"
+                    className="size-full object-cover"
+                  />
+                )}
+                <button
+                  type="button"
+                  disabled={uploading}
+                  aria-label="Clear selected media"
+                  onClick={() => setMediaFile(undefined)}
+                  className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-dark/75 text-white shadow-soft"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3 p-3">
+                <p className="min-w-0 truncate text-sm font-medium text-text-primary">
+                  {mediaFile.name}
+                </p>
+                <span className="shrink-0 text-xs text-text-muted">
+                  {formatFileSize(mediaFile.size)}
+                </span>
+              </div>
+            </div>
+          ) : null}
+          <label className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-card border border-dashed border-border-strong bg-surface px-4 transition-colors hover:border-primary hover:bg-primary-soft/40">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <ImagePlus aria-hidden="true" className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-text-primary">
+                {mediaFile
+                  ? 'Choose a different file'
+                  : memory?.media.length && !removeMedia
+                    ? 'Replace current media'
+                    : 'Add photo or video'}
+              </span>
+              <span className="mt-0.5 block text-xs text-text-muted">
+                JPEG, PNG, WebP, GIF, MP4 or WebM · Max 25 MB
+              </span>
             </span>
             <input
               id={`${formId}-media`}
@@ -299,21 +361,13 @@ export function MemoryForm({
                 const file = event.target.files?.[0]
                 setMediaError('')
                 if (!file) return
-                const allowed = [
-                  'image/jpeg',
-                  'image/png',
-                  'image/webp',
-                  'image/gif',
-                  'video/mp4',
-                  'video/webm',
-                ].includes(file.type)
-                if (
-                  !allowed ||
-                  file.size > 25 * 1024 * 1024 ||
-                  file.size === 0
-                ) {
+                try {
+                  validateMemoryFile(file)
+                } catch (caught) {
                   setMediaError(
-                    'Choose a supported photo or video smaller than 25 MB.',
+                    caught instanceof Error
+                      ? caught.message
+                      : 'Choose a valid media file.',
                   )
                   event.target.value = ''
                   return

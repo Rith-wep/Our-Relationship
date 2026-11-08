@@ -116,11 +116,11 @@ export function CouplePage() {
           editablePartnerId={auth.user?.id ?? ''}
           uploading={couple.uploadingPhoto}
           uploadProgress={couple.photoUploadProgress}
-          onUploadPhoto={(file) => void couple.uploadProfilePhoto(file)}
           onRemovePhoto={() => void couple.removeProfilePhoto()}
           onCancel={() => setEditProfile(false)}
-          onSave={(profile) => {
-            void couple.updateProfile(profile)
+          onSave={async (profile, photoFile) => {
+            await couple.updateProfile(profile)
+            if (photoFile) await couple.uploadProfilePhoto(photoFile)
             setEditProfile(false)
           }}
         />
