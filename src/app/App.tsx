@@ -7,20 +7,23 @@ import { MemoriesProvider } from '@/app/providers/MemoriesProvider'
 import { router } from '@/app/router'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { CoupleSessionProvider } from '@/features/onboarding/CoupleSessionProvider'
+import { PwaProvider } from '@/features/pwa/PwaProvider'
 
 export function App() {
   return (
-    <AuthProvider>
-      <ThemeInitializer />
-      <CoupleSessionProvider>
-        <CoupleProvider>
-          <LettersProvider>
-            <MemoriesProvider>
-              <RouterProvider router={router} />
-            </MemoriesProvider>
-          </LettersProvider>
-        </CoupleProvider>
-      </CoupleSessionProvider>
-    </AuthProvider>
+    <PwaProvider>
+      <AuthProvider>
+        <ThemeInitializer />
+        <CoupleSessionProvider>
+          <CoupleProvider>
+            <LettersProvider>
+              <MemoriesProvider>
+                <RouterProvider router={router} />
+              </MemoriesProvider>
+            </LettersProvider>
+          </CoupleProvider>
+        </CoupleSessionProvider>
+      </AuthProvider>
+    </PwaProvider>
   )
 }

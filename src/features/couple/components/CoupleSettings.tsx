@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  Download,
   Info,
   LockKeyhole,
   MapPin,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react'
 
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
+import { usePwa } from '@/features/pwa/usePwa'
 
 export function CoupleSettings({
   onEdit,
@@ -18,6 +20,7 @@ export function CoupleSettings({
   onConnection: () => void
   onBackground: () => void
 }) {
+  const pwa = usePwa()
   const items = [
     {
       label: 'Edit Couple Profile',
@@ -62,6 +65,20 @@ export function CoupleSettings({
             Background
           </span>
         </button>
+        {pwa.canInstall ? (
+          <button
+            type="button"
+            onClick={() => void pwa.install()}
+            className="flex min-h-16 w-full items-center gap-3 border-b border-border px-4 text-left"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
+              <Download aria-hidden="true" className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1 text-sm font-semibold">
+              Install app
+            </span>
+          </button>
+        ) : null}
         {items.map(({ label, icon: Icon, action }) => {
           const content = (
             <>
