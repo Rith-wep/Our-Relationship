@@ -53,4 +53,9 @@ export function applyBackgroundPreference(preference: BackgroundPreference) {
   root.dataset.appBackground = preference.preset
   root.dataset.appBackgroundDark = String(isDarkBackground(color))
   root.style.setProperty('--custom-app-background', color)
+  if (root.dataset.theme !== 'dark') {
+    document
+      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute('content', color)
+  }
 }

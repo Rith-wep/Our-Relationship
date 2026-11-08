@@ -6,7 +6,7 @@
 
 **Frontend, Supabase Auth, secure couple onboarding, and database-backed relationship features are implemented.**
 
-The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, private media, and Realtime synchronization. PWA behavior and deployment remain planned.
+The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, private media, and Realtime synchronization. The application is installable as a PWA with a deliberately limited, privacy-aware offline shell.
 
 ### Implemented now
 
@@ -45,10 +45,7 @@ The repository contains a working React, Vite, and TypeScript application with T
 - Optional shared next-meeting date with a compact Home countdown
 - One-tap, timestamped Thinking of You signals with couple-scoped RLS and Realtime updates
 - Shared light-mode application backgrounds with six presets, an optional custom color, automatic contrast handling, persistence, and Realtime synchronization
-
-### Not implemented yet
-
-- PWA manifest, service worker, offline behavior, and deployment configuration
+- Installable PWA manifest, standalone presentation, production icons, safe app-shell precaching, explicit update prompts, and connectivity states
 
 ## Product vision
 
@@ -579,16 +576,16 @@ Presence indicators, typing indicators, and custom event infrastructure are inte
 
 ## PWA and offline behavior
 
-Planned PWA support includes an installable manifest, application icons, theme colors, standalone display, service-worker updates, and an offline application shell.
+PWA support includes an installable manifest, application icons, theme colors, standalone display, explicit service-worker updates, and a limited offline application shell. Supported browsers expose an **Install app** action under **Our Space → Settings**.
 
 Offline behavior will be deliberately limited because the product contains sensitive and collaborative data:
 
-- Cache versioned static assets and the minimum application shell.
+- Versioned static assets and the minimum application shell are precached.
 - Do not broadly cache private media, letters, authenticated API responses, or signed URLs in the service worker.
-- Show clear offline and reconnecting states.
+- Clear offline and reconnecting states are shown.
 - Initially require a network connection for authentication, uploads, pairing, destructive actions, scheduled letters, and reliable cross-device synchronization.
 - Consider offline drafts or a mutation queue only after conflict handling, device privacy, storage limits, and logout cleanup have been designed and tested.
-- Provide an accessible update prompt rather than replacing an active session unexpectedly.
+- An accessible update prompt lets the user finish editing before replacing an active version.
 
 PWA installation improves convenience but does not make the web app equivalent to a fully offline native application.
 
@@ -667,7 +664,7 @@ Tests should use synthetic data only. No real relationship content should appear
 
 ### Phase 7 — PWA, animations, testing, and deployment
 
-- Add the manifest, icons, service worker, installation experience, and safe offline shell.
+- Manifest, icons, service worker, installation experience, and safe offline shell are implemented.
 - Refine restrained motion and reduced-motion behavior.
 - Complete accessibility, security, responsive, performance, and end-to-end verification.
 - Deploy production infrastructure and document operational procedures.

@@ -24,6 +24,15 @@ export function ThemeToggle({
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
     window.localStorage.setItem(storageKey, theme)
+    const themeColor =
+      theme === 'dark'
+        ? '#111827'
+        : getComputedStyle(document.documentElement)
+            .getPropertyValue('--color-background')
+            .trim() || '#ffffff'
+    document
+      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute('content', themeColor)
   }, [theme])
 
   const isDark = theme === 'dark'
@@ -81,6 +90,15 @@ export function ThemeInitializer() {
     const theme = getInitialTheme()
     document.documentElement.dataset.theme = theme
     document.documentElement.style.colorScheme = theme
+    const themeColor =
+      theme === 'dark'
+        ? '#111827'
+        : getComputedStyle(document.documentElement)
+            .getPropertyValue('--color-background')
+            .trim() || '#ffffff'
+    document
+      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute('content', themeColor)
   }, [])
 
   return null
