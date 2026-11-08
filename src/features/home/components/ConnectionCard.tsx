@@ -73,7 +73,8 @@ export function ConnectionCard({
 }) {
   const [now, setNow] = useState(() => new Date())
   const [sending, setSending] = useState(false)
-  const configuredPartners = profile.partners.filter(
+  const pairedPartners = profile.partners.filter((partner) => partner.id)
+  const hasConnectionDetails = pairedPartners.some(
     (partner) => partner.city || partner.country || partner.timezone,
   )
   const meeting = meetingLabel(profile.nextTimeTogether)
@@ -100,13 +101,13 @@ export function ConnectionCard({
         Our connection
       </h2>
       <div className="mt-3 overflow-hidden rounded-card border border-border bg-card shadow-soft">
-        {configuredPartners.length > 0 ? (
+        {hasConnectionDetails ? (
           <div
             className={`grid gap-px bg-border ${
-              configuredPartners.length > 1 ? 'grid-cols-2' : 'grid-cols-1'
+              pairedPartners.length > 1 ? 'grid-cols-2' : 'grid-cols-1'
             }`}
           >
-            {configuredPartners.map((partner) => (
+            {pairedPartners.map((partner) => (
               <div key={partner.id} className="bg-card p-4">
                 <p className="truncate text-sm font-semibold">{partner.name}</p>
                 {(partner.city || partner.country) && (
@@ -122,6 +123,11 @@ export function ConnectionCard({
                     </span>
                   </p>
                 )}
+                {!partner.city && !partner.country ? (
+                  <p className="mt-1 text-xs text-text-muted">
+                    Location not set
+                  </p>
+                ) : null}
                 {localTime(partner.timezone, now) ? (
                   <p className="mt-1 flex items-center gap-1 text-xs text-text-secondary">
                     <Clock3
