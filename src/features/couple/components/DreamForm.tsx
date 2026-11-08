@@ -63,7 +63,7 @@ export function DreamForm({
         />
       </div>
       <div className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2">
-        <div>
+        <div className="min-w-0">
           <label htmlFor="dream-category" className="form-label">
             Category
           </label>
@@ -83,7 +83,7 @@ export function DreamForm({
             <option value="other">Other</option>
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label htmlFor="dream-target-date" className="form-label">
             Target date
           </label>
