@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Our Little Universe</title>
+  <rect width="512" height="512" rx="112" fill="#ff69b4"/>
+  <path
+    fill="#fff"
+    d="M256 390c-12-10-108-78-151-131-49-61-13-143 61-143 42 0 72 24 90 52 18-28 48-52 90-52 74 0 110 82 61 143-43 53-139 121-151 131Z"
+  />
+</svg>
