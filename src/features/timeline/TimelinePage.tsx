@@ -1,9 +1,10 @@
 import { Plus, Trash2 } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useMemories } from '@/app/providers/useMemories'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
+import { PageSkeleton } from '@/components/ui/PageSkeleton'
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
 import { MemoryForm } from '@/features/timeline/components/MemoryForm'
 import { PhotoViewer } from '@/features/timeline/components/PhotoViewer'
@@ -18,6 +19,8 @@ export function TimelinePage() {
     deleteMemory,
     uploading,
     uploadProgress,
+    fullyLoaded,
+    loadAll,
   } = useMemories()
   const [formMemory, setFormMemory] = useState<
     TimelineMemory | null | undefined
@@ -39,6 +42,10 @@ export function TimelinePage() {
   const closeDeleteDialog = useCallback(() => setMemoryToDelete(null), [])
   const closePhoto = useCallback(() => setPhotoMemory(null), [])
 
+  useEffect(() => {
+    if (!fullyLoaded) void loadAll()
+  }, [fullyLoaded, loadAll])
+
   const handleSave = async (draft: MemoryDraft) => {
     if (formMemory) {
       await updateMemory(formMemory.id, draft)
@@ -53,6 +60,8 @@ export function TimelinePage() {
     void deleteMemory(memoryToDelete.id)
     closeDeleteDialog()
   }
+
+  if (!fullyLoaded) return <PageSkeleton />
 
   return (
     <section className="py-2">

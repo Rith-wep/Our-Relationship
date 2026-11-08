@@ -74,14 +74,16 @@ function mapMemory(
 export async function loadMemories(
   coupleId: string,
   names: Map<string, string>,
+  options?: { activeOnly?: boolean; limit?: number },
 ) {
-  const result = asServiceResult<MemoryRow[]>(
-    await supabase
-      .from('memories')
-      .select('*')
-      .eq('couple_id', coupleId)
-      .order('event_date', { ascending: false }),
-  )
+  let query = supabase
+    .from('memories')
+    .select('*')
+    .eq('couple_id', coupleId)
+    .order('event_date', { ascending: false })
+  if (options?.activeOnly) query = query.is('deleted_at', null)
+  if (options?.limit) query = query.limit(options.limit)
+  const result = asServiceResult<MemoryRow[]>(await query)
   check(result.error)
   const rows = result.data ?? []
   const media = await loadMedia(rows.map((row) => row.id))

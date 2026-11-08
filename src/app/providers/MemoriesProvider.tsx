@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -32,6 +33,11 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const startsOnFullMemoryRoute =
+    window.location.pathname.startsWith('/timeline') ||
+    window.location.pathname.startsWith('/memories')
+  const fullDataRef = useRef(startsOnFullMemoryRoute)
+  const [fullyLoaded, setFullyLoaded] = useState(startsOnFullMemoryRoute)
   const memberNames = useMemo(
     () =>
       new Map(
@@ -53,7 +59,13 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
       if (showLoading) setLoading(true)
       setError(null)
       try {
-        setMemories(await loadMemories(session.couple.coupleId, memberNames))
+        setMemories(
+          await loadMemories(
+            session.couple.coupleId,
+            memberNames,
+            fullDataRef.current ? undefined : { activeOnly: true, limit: 3 },
+          ),
+        )
       } catch (caught) {
         setError(
           caught instanceof Error ? caught.message : 'Unable to load memories.',
@@ -69,6 +81,27 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
     const timeout = window.setTimeout(() => void retry(), 0)
     return () => window.clearTimeout(timeout)
   }, [retry])
+
+  const loadAll = useCallback(async () => {
+    if (fullDataRef.current || !session.couple) return
+    setLoading(true)
+    setError(null)
+    try {
+      const allMemories = await loadMemories(
+        session.couple.coupleId,
+        memberNames,
+      )
+      fullDataRef.current = true
+      setFullyLoaded(true)
+      setMemories(allMemories)
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : 'Unable to load memories.',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [memberNames, session.couple])
 
   const realtimeTargets = useMemo(
     () =>
@@ -194,8 +227,10 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
       error,
       uploading,
       uploadProgress,
+      fullyLoaded,
       realtimeState,
       retry,
+      loadAll,
       createMemory,
       updateMemory,
       deleteMemory,
@@ -208,6 +243,8 @@ export function MemoriesProvider({ children }: { children: ReactNode }) {
     deleteMemory,
     error,
     loading,
+    fullyLoaded,
+    loadAll,
     memories,
     uploadProgress,
     uploading,

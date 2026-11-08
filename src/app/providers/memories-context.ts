@@ -11,8 +11,10 @@ export interface MemoriesContextValue {
   error: string | null
   uploading: boolean
   uploadProgress: number
+  fullyLoaded: boolean
   realtimeState: RealtimeState
   retry: () => Promise<void>
+  loadAll: () => Promise<void>
   createMemory: (draft: MemoryDraft) => Promise<void>
   updateMemory: (id: string, draft: MemoryDraft) => Promise<void>
   deleteMemory: (id: string) => Promise<void>

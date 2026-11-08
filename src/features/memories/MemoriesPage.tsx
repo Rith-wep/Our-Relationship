@@ -1,10 +1,11 @@
 import { Images, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useMemories } from '@/app/providers/useMemories'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { PageSkeleton } from '@/components/ui/PageSkeleton'
 import { GalleryCard } from '@/features/memories/components/GalleryCard'
 import { MemoryDetail } from '@/features/memories/components/MemoryDetail'
 import { MemoryFilters } from '@/features/memories/components/MemoryFilters'
@@ -34,6 +35,8 @@ export function MemoriesPage() {
     toggleFavorite,
     uploading,
     uploadProgress,
+    fullyLoaded,
+    loadAll,
   } = useMemories()
   const [filter, setFilter] = useState<MemoryFilter>('all')
   const [view, setView] = useState<'gallery' | 'deleted'>('gallery')
@@ -70,6 +73,10 @@ export function MemoriesPage() {
   const closeDelete = useCallback(() => setMemoryToDelete(null), [])
   const closeRemove = useCallback(() => setMemoryToRemove(null), [])
 
+  useEffect(() => {
+    if (!fullyLoaded) void loadAll()
+  }, [fullyLoaded, loadAll])
+
   const handleSave = async (draft: MemoryDraft) => {
     if (formMemory) await updateMemory(formMemory.id, draft)
     else await createMemory(draft)
@@ -97,6 +104,8 @@ export function MemoriesPage() {
     void permanentlyDeleteMemory(memoryToRemove.id)
     closeRemove()
   }
+
+  if (!fullyLoaded) return <PageSkeleton />
 
   return (
     <section className="py-2 pb-5">
