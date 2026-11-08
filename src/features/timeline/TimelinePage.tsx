@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMemories } from '@/app/providers/useMemories'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
-import { PageSkeleton } from '@/components/ui/PageSkeleton'
+import { DataSectionError } from '@/components/ui/DataSectionError'
+import { Skeleton } from '@/components/ui/PageSkeleton'
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
 import { MemoryForm } from '@/features/timeline/components/MemoryForm'
 import { PhotoViewer } from '@/features/timeline/components/PhotoViewer'
@@ -19,6 +20,9 @@ export function TimelinePage() {
     deleteMemory,
     uploading,
     uploadProgress,
+    loading,
+    error,
+    retry,
     fullyLoaded,
     loadAll,
   } = useMemories()
@@ -37,6 +41,9 @@ export function TimelinePage() {
       ),
     [activeMemories],
   )
+  const showTimelineState =
+    !fullyLoaded || (activeMemories.length === 0 && (loading || Boolean(error)))
+  const retryTimeline = fullyLoaded ? retry : loadAll
 
   const closeForm = useCallback(() => setFormMemory(undefined), [])
   const closeDeleteDialog = useCallback(() => setMemoryToDelete(null), [])
@@ -61,28 +68,45 @@ export function TimelinePage() {
     closeDeleteDialog()
   }
 
-  if (!fullyLoaded) return <PageSkeleton />
-
   return (
     <section className="py-2">
       <PageHeader title="Our Story" description="Our moments together." />
 
-      <TimelineList
-        memories={sortedMemories}
-        onAdd={() => setFormMemory(null)}
-        onEdit={setFormMemory}
-        onDelete={setMemoryToDelete}
-        onViewPhoto={setPhotoMemory}
-      />
+      {showTimelineState ? (
+        <div className="mt-6 space-y-5" aria-label="Loading timeline">
+          {error && !loading ? (
+            <DataSectionError
+              message="Your timeline could not be loaded."
+              onRetry={retryTimeline}
+            />
+          ) : (
+            <>
+              <Skeleton className="h-48 w-full rounded-card" />
+              <Skeleton className="h-56 w-full rounded-card" />
+              <Skeleton className="h-40 w-full rounded-card" />
+            </>
+          )}
+        </div>
+      ) : (
+        <TimelineList
+          memories={sortedMemories}
+          onAdd={() => setFormMemory(null)}
+          onEdit={setFormMemory}
+          onDelete={setMemoryToDelete}
+          onViewPhoto={setPhotoMemory}
+        />
+      )}
 
-      <button
-        type="button"
-        onClick={() => setFormMemory(null)}
-        aria-label="Add memory"
-        className="timeline-fab fixed z-30 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_8px_24px_rgb(201_47_125/0.28)] transition-colors hover:bg-primary-strong active:bg-primary-strong motion-reduce:transition-none"
-      >
-        <Plus aria-hidden="true" className="size-6" strokeWidth={2.5} />
-      </button>
+      {!showTimelineState ? (
+        <button
+          type="button"
+          onClick={() => setFormMemory(null)}
+          aria-label="Add memory"
+          className="timeline-fab fixed z-30 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_8px_24px_rgb(201_47_125/0.28)] transition-colors hover:bg-primary-strong active:bg-primary-strong motion-reduce:transition-none"
+        >
+          <Plus aria-hidden="true" className="size-6" strokeWidth={2.5} />
+        </button>
+      ) : null}
 
       <MemoryDialog
         open={formMemory !== undefined}

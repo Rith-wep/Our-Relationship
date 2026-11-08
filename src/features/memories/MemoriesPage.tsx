@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMemories } from '@/app/providers/useMemories'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
+import { DataSectionError } from '@/components/ui/DataSectionError'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { PageSkeleton } from '@/components/ui/PageSkeleton'
+import { Skeleton } from '@/components/ui/PageSkeleton'
 import { GalleryCard } from '@/features/memories/components/GalleryCard'
 import { MemoryDetail } from '@/features/memories/components/MemoryDetail'
 import { MemoryFilters } from '@/features/memories/components/MemoryFilters'
@@ -35,6 +36,9 @@ export function MemoriesPage() {
     toggleFavorite,
     uploading,
     uploadProgress,
+    loading,
+    error,
+    retry,
     fullyLoaded,
     loadAll,
   } = useMemories()
@@ -68,6 +72,12 @@ export function MemoriesPage() {
       return sorted.filter((memory) => memory.isFavorite)
     return sorted
   }, [activeMemories, filter])
+  const showMemoryState =
+    !fullyLoaded ||
+    (activeMemories.length === 0 &&
+      deletedMemories.length === 0 &&
+      (loading || Boolean(error)))
+  const retryMemories = fullyLoaded ? retry : loadAll
 
   const closeForm = useCallback(() => setFormMemory(undefined), [])
   const closeDelete = useCallback(() => setMemoryToDelete(null), [])
@@ -105,15 +115,17 @@ export function MemoriesPage() {
     closeRemove()
   }
 
-  if (!fullyLoaded) return <PageSkeleton />
-
   return (
     <section className="py-2 pb-5">
       <PageHeader
         title="Our Memories"
         description="Keep your moments close."
         action={
-          <Button size="sm" onClick={() => setFormMemory(null)}>
+          <Button
+            size="sm"
+            disabled={showMemoryState}
+            onClick={() => setFormMemory(null)}
+          >
             <Plus aria-hidden="true" className="size-4" />
             Add
           </Button>
@@ -146,7 +158,23 @@ export function MemoriesPage() {
         ))}
       </div>
 
-      {view === 'gallery' ? (
+      {showMemoryState ? (
+        <div className="mt-6" aria-label="Loading memories">
+          {error && !loading ? (
+            <DataSectionError
+              message="Your memories could not be loaded."
+              onRetry={retryMemories}
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-52 rounded-card" />
+              <Skeleton className="h-40 rounded-card" />
+              <Skeleton className="h-40 rounded-card" />
+              <Skeleton className="h-52 rounded-card" />
+            </div>
+          )}
+        </div>
+      ) : view === 'gallery' ? (
         <div className="mt-5">
           <MemoryFilters selected={filter} onChange={setFilter} />
           {filteredMemories.length > 0 ? (

@@ -4,7 +4,9 @@ import { useMemo, useState } from 'react'
 import { useLetters } from '@/app/providers/useLetters'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
+import { DataSectionError } from '@/components/ui/DataSectionError'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/PageSkeleton'
 import { ComposeLetterDialog } from '@/features/letters/components/ComposeLetterDialog'
 import { AuthenticatedIdentity } from '@/features/letters/components/AuthenticatedIdentity'
 import { DeletedLetters } from '@/features/letters/components/DeletedLetters'
@@ -48,6 +50,9 @@ export function LettersPage() {
     toggleFavorite,
     softDelete,
     restoreLetter,
+    loading,
+    error,
+    retry,
   } = useLetters()
   const auth = useAuth()
   const coupleSession = useCoupleSession()
@@ -166,7 +171,7 @@ export function LettersPage() {
         action={
           <Button
             size="sm"
-            disabled={!otherPartner}
+            disabled={!otherPartner || loading}
             onClick={() => setComposeLetter(null)}
           >
             <PenLine aria-hidden="true" className="size-4" />
@@ -197,7 +202,18 @@ export function LettersPage() {
       </div>
 
       <div className="mt-5">
-        {showDeleted ? (
+        {loading ? (
+          <div className="space-y-3" aria-label="Loading letters">
+            <Skeleton className="h-28 w-full rounded-card" />
+            <Skeleton className="h-28 w-full rounded-card" />
+            <Skeleton className="h-28 w-full rounded-card" />
+          </div>
+        ) : error ? (
+          <DataSectionError
+            message="Your letters could not be loaded."
+            onRetry={retry}
+          />
+        ) : showDeleted ? (
           <DeletedLetters
             letters={deletedLetters}
             currentPartnerId={currentPartnerId}
@@ -235,7 +251,8 @@ export function LettersPage() {
       <button
         type="button"
         onClick={() => setShowDeleted((current) => !current)}
-        className="mt-5 min-h-11 rounded-control px-2 text-sm font-semibold text-text-secondary hover:text-text-primary"
+        disabled={loading}
+        className="mt-5 min-h-11 rounded-control px-2 text-sm font-semibold text-text-secondary hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Trash2 aria-hidden="true" className="mr-1.5 inline size-4" />
         {showDeleted

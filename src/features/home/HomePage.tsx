@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 
 import { useCouple } from '@/app/providers/useCouple'
 import { useMemories } from '@/app/providers/useMemories'
+import { DataSectionError } from '@/components/ui/DataSectionError'
+import { Skeleton } from '@/components/ui/PageSkeleton'
 import { useAuth } from '@/features/auth/useAuth'
 import { AnniversaryCard } from '@/features/home/components/AnniversaryCard'
 import { CoupleHero } from '@/features/home/components/CoupleHero'
@@ -49,48 +51,73 @@ export function HomePage() {
             Our Little Universe
           </h1>
         </div>
-        <div
-          className="flex shrink-0 -space-x-2 pt-1"
-          aria-label={`${profile.partners[0].name} and ${profile.partners[1].name}`}
-        >
-          {profile.partners.map((partner, index) => (
-            <span
-              key={partner.name}
-              aria-hidden="true"
-              className={[
-                'flex size-9 items-center justify-center rounded-full border-2 border-border text-xs font-semibold',
-                index === 0
-                  ? 'bg-primary-soft text-primary-strong'
-                  : 'bg-surface text-text-secondary',
-              ].join(' ')}
-            >
-              {partner.photo ? (
-                <img
-                  src={partner.photo}
-                  alt=""
-                  decoding="async"
-                  fetchPriority="high"
-                  className="size-full rounded-full object-cover"
-                />
-              ) : (
-                partner.initial
-              )}
-            </span>
-          ))}
-        </div>
+        {couple.loading ? (
+          <div className="flex shrink-0 -space-x-2 pt-1" aria-hidden="true">
+            <Skeleton className="size-9 rounded-full border-2 border-card" />
+            <Skeleton className="size-9 rounded-full border-2 border-card" />
+          </div>
+        ) : (
+          <div
+            className="flex shrink-0 -space-x-2 pt-1"
+            aria-label={`${profile.partners[0].name} and ${profile.partners[1].name}`}
+          >
+            {profile.partners.map((partner, index) => (
+              <span
+                key={partner.name}
+                aria-hidden="true"
+                className={[
+                  'flex size-9 items-center justify-center rounded-full border-2 border-border text-xs font-semibold',
+                  index === 0
+                    ? 'bg-primary-soft text-primary-strong'
+                    : 'bg-surface text-text-secondary',
+                ].join(' ')}
+              >
+                {partner.photo ? (
+                  <img
+                    src={partner.photo}
+                    alt=""
+                    decoding="async"
+                    fetchPriority="high"
+                    className="size-full rounded-full object-cover"
+                  />
+                ) : (
+                  partner.initial
+                )}
+              </span>
+            ))}
+          </div>
+        )}
       </header>
 
-      <CoupleHero couple={profile} />
-      <ConnectionCard
-        profile={profile}
-        userId={auth.user?.id ?? ''}
-        latest={couple.latestThinkingOfYou}
-        onSend={couple.sendThinkingOfYou}
-      />
-      <RelationshipCounter
-        relationshipStartDate={profile.relationshipStartDate}
-      />
-      <AnniversaryCard relationshipStartDate={profile.relationshipStartDate} />
+      {couple.loading ? (
+        <>
+          <Skeleton className="h-52 w-full rounded-card" />
+          <Skeleton className="h-36 w-full rounded-card" />
+          <Skeleton className="h-32 w-full rounded-card" />
+          <Skeleton className="h-28 w-full rounded-card" />
+        </>
+      ) : couple.error ? (
+        <DataSectionError
+          message="Your shared-space details are unavailable."
+          onRetry={couple.retry}
+        />
+      ) : (
+        <>
+          <CoupleHero couple={profile} />
+          <ConnectionCard
+            profile={profile}
+            userId={auth.user?.id ?? ''}
+            latest={couple.latestThinkingOfYou}
+            onSend={couple.sendThinkingOfYou}
+          />
+          <RelationshipCounter
+            relationshipStartDate={profile.relationshipStartDate}
+          />
+          <AnniversaryCard
+            relationshipStartDate={profile.relationshipStartDate}
+          />
+        </>
+      )}
       <DailyLoveNote />
       <RecentMemories
         memories={memories.activeMemories}

@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 import { useCouple } from '@/app/providers/useCouple'
 import { Button } from '@/components/ui/Button'
+import { DataSectionError } from '@/components/ui/DataSectionError'
+import { Skeleton } from '@/components/ui/PageSkeleton'
 import { CoupleProfile } from '@/features/couple/components/CoupleProfile'
 import { BackgroundSettings } from '@/features/couple/components/BackgroundSettings'
 import { CoupleSettings } from '@/features/couple/components/CoupleSettings'
@@ -59,28 +61,44 @@ export function CouplePage() {
           Us
         </h1>
       </header>
-      <CoupleProfile
-        profile={couple.profile}
-        onEdit={() => setEditProfile(true)}
-      />
-      <DreamsList
-        dreams={couple.dreams}
-        onAdd={() => setDreamForm(null)}
-        onEdit={setDreamForm}
-        onToggle={(id) => void couple.toggleDream(id)}
-        onDelete={setDreamToDelete}
-      />
-      <ImportantDates
-        dates={couple.importantDates}
-        onAdd={() => setDateForm(null)}
-        onEdit={setDateForm}
-        onDelete={setDateToDelete}
-      />
-      <CoupleSettings
-        onEdit={() => setEditProfile(true)}
-        onConnection={() => setEditConnection(true)}
-        onBackground={() => setEditBackground(true)}
-      />
+      {couple.loading ? (
+        <>
+          <Skeleton className="h-64 w-full rounded-card" />
+          <Skeleton className="h-48 w-full rounded-card" />
+          <Skeleton className="h-36 w-full rounded-card" />
+          <Skeleton className="h-72 w-full rounded-card" />
+        </>
+      ) : couple.error ? (
+        <DataSectionError
+          message="Your shared-space settings could not be loaded."
+          onRetry={couple.retry}
+        />
+      ) : (
+        <>
+          <CoupleProfile
+            profile={couple.profile}
+            onEdit={() => setEditProfile(true)}
+          />
+          <DreamsList
+            dreams={couple.dreams}
+            onAdd={() => setDreamForm(null)}
+            onEdit={setDreamForm}
+            onToggle={(id) => void couple.toggleDream(id)}
+            onDelete={setDreamToDelete}
+          />
+          <ImportantDates
+            dates={couple.importantDates}
+            onAdd={() => setDateForm(null)}
+            onEdit={setDateForm}
+            onDelete={setDateToDelete}
+          />
+          <CoupleSettings
+            onEdit={() => setEditProfile(true)}
+            onConnection={() => setEditConnection(true)}
+            onBackground={() => setEditBackground(true)}
+          />
+        </>
+      )}
       <InvitePartnerCard />
       <div>
         {signOutError ? (
