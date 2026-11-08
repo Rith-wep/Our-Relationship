@@ -30,6 +30,7 @@ export const router = createBrowserRouter([
         element: <CoupleOnboardingGate />,
         children: [
           { path: 'onboarding', element: <OnboardingRoute /> },
+          { path: 'join/:inviteToken', element: <OnboardingRoute /> },
           {
             element: <AppShell />,
             children: [

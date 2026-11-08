@@ -1,6 +1,6 @@
 begin;
 
-select plan(65);
+select plan(80);
 
 -- Synthetic identities. These UUIDs and addresses are test-only.
 insert into auth.users (id, email)
@@ -77,6 +77,18 @@ select throws_ok(
   $$insert into public.couple_invitations (couple_id, token_hash, created_by, expires_at) values ('10000000-0000-4000-8000-000000000001', decode('aa','hex'), '00000000-0000-4000-8000-00000000000a', now() + interval '1 day')$$,
   '42501', null, 'invitations cannot be forged through direct insert'
 );
+select lives_ok(
+  $$update public.couples set background_preset = 'soft_pink' where id = '10000000-0000-4000-8000-000000000001'$$,
+  'couple member can update the shared background'
+);
+select is(
+  (select background_preset from public.couples where id = '10000000-0000-4000-8000-000000000001'),
+  'soft_pink', 'shared background preference is stored'
+);
+select throws_ok(
+  $$update public.couples set background_preset = 'custom', background_custom_color = null where id = '10000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'custom background requires a valid color'
+);
 reset role;
 select throws_ok(
   $$insert into public.memories (couple_id, created_by, updated_by, title, event_date) values ('20000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-00000000000a', 'Forbidden', current_date)$$,
@@ -93,8 +105,34 @@ select lives_ok(
   $$update public.memories set title = 'Forbidden' where id = '11000000-0000-4000-8000-000000000001'$$,
   'unrelated update is safely filtered by RLS'
 );
+select lives_ok(
+  $$update public.couples set background_preset = 'cream' where id = '10000000-0000-4000-8000-000000000001'$$,
+  'unrelated background update is safely filtered by RLS'
+);
 reset role;
 select is((select title from public.memories where id = '11000000-0000-4000-8000-000000000001'), 'Couple one memory', 'unrelated update changes no row');
+select is(
+  (select background_preset from public.couples where id = '10000000-0000-4000-8000-000000000001'),
+  'soft_pink', 'unrelated user cannot change the shared background'
+);
+
+-- The other partner receives and can update the same shared preference.
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000b', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000000b","email":"partner-b@example.test"}', true);
+set local role authenticated;
+select lives_ok(
+  $$update public.couples set background_preset = 'custom', background_custom_color = '#334455' where id = '10000000-0000-4000-8000-000000000001'$$,
+  'second partner can update the shared background'
+);
+select is(
+  (select background_custom_color from public.couples where id = '10000000-0000-4000-8000-000000000001'),
+  '#334455', 'second partner reads the shared custom color'
+);
+select throws_ok(
+  $$update public.couples set background_custom_color = 'not-a-color' where id = '10000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'invalid custom color is rejected'
+);
+reset role;
 
 -- Capacity and one-couple constraints remain enforced even for privileged writes.
 select throws_ok(
@@ -403,6 +441,67 @@ select is(
   ),
   1::bigint,
   'Thinking of You signals are published to Realtime'
+);
+
+-- Invitation replacement and safe status listing.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000000c","email":"unrelated-c@example.test"}', true);
+set local role authenticated;
+
+insert into invitation_tokens
+select 'replacement-one', invitation_id, raw_token
+from public.create_couple_invitation(
+  '20000000-0000-4000-8000-000000000002', null,
+  'invitee-e@example.test', interval '1 day'
+);
+insert into invitation_tokens
+select 'replacement-two', invitation_id, raw_token
+from public.create_couple_invitation(
+  '20000000-0000-4000-8000-000000000002', null,
+  'invitee-e@example.test', interval '1 day'
+);
+
+select is(
+  (select status from public.list_couple_invitations('20000000-0000-4000-8000-000000000002')
+   where invitation_id = (select invitation_id from invitation_tokens where kind = 'replacement-one')),
+  'revoked',
+  'creating a replacement revokes the previous active invitation'
+);
+select is(
+  (select status from public.list_couple_invitations('20000000-0000-4000-8000-000000000002')
+   where invitation_id = (select invitation_id from invitation_tokens where kind = 'replacement-two')),
+  'active',
+  'the newest replacement invitation remains active'
+);
+select is(
+  (select recipient_email from public.list_couple_invitations('20000000-0000-4000-8000-000000000002')
+   where invitation_id = (select invitation_id from invitation_tokens where kind = 'replacement-two')),
+  'invitee-e@example.test',
+  'safe invitation listing returns recipient metadata'
+);
+select ok(
+  position(
+    'token' in pg_get_function_result('public.list_couple_invitations(uuid)'::regprocedure)
+  ) = 0,
+  'safe invitation listing exposes no token fields'
+);
+
+select throws_ok(
+  $$select * from public.list_couple_invitations('10000000-0000-4000-8000-000000000001')$$,
+  '42501', 'not authorized', 'unrelated users cannot list invitations'
+);
+
+select lives_ok(
+  format('select public.revoke_couple_invitation(%L)', (select invitation_id from invitation_tokens where kind = 'replacement-two')),
+  'a couple member can revoke the active invitation'
+);
+
+select ok(
+  not has_function_privilege('anon', 'public.create_couple(date,text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.create_couple_invitation(uuid,uuid,text,interval)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.accept_couple_invitation(text)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.revoke_couple_invitation(uuid)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.list_couple_invitations(uuid)', 'EXECUTE'),
+  'anonymous role cannot execute couple or invitation workflows'
 );
 
 select * from finish();

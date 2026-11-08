@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useCouple } from '@/app/providers/useCouple'
 import { Button } from '@/components/ui/Button'
 import { CoupleProfile } from '@/features/couple/components/CoupleProfile'
+import { BackgroundSettings } from '@/features/couple/components/BackgroundSettings'
 import { CoupleSettings } from '@/features/couple/components/CoupleSettings'
 import { ConnectionSettingsForm } from '@/features/couple/components/ConnectionSettingsForm'
 import { DreamForm } from '@/features/couple/components/DreamForm'
@@ -19,12 +20,14 @@ import type {
 import { MemoryDialog } from '@/features/timeline/components/MemoryDialog'
 import { useAuth } from '@/features/auth/useAuth'
 import { InvitePartnerCard } from '@/features/onboarding/InvitePartnerCard'
+import { applyBackgroundPreference } from '@/features/couple/backgrounds'
 
 export function CouplePage() {
   const couple = useCouple()
   const auth = useAuth()
   const [editProfile, setEditProfile] = useState(false)
   const [editConnection, setEditConnection] = useState(false)
+  const [editBackground, setEditBackground] = useState(false)
   const [dreamForm, setDreamForm] = useState<Dream | null | undefined>()
   const [dreamToDelete, setDreamToDelete] = useState<Dream | null>(null)
   const [dateForm, setDateForm] = useState<ImportantDate | null | undefined>()
@@ -41,6 +44,10 @@ export function CouplePage() {
     else void couple.createSpecialDate(draft)
     setDateForm(undefined)
   }
+  const closeBackground = () => {
+    applyBackgroundPreference(couple.profile.background)
+    setEditBackground(false)
+  }
 
   return (
     <div className="space-y-9 py-2 pb-5">
@@ -51,7 +58,6 @@ export function CouplePage() {
         <h1 className="page-title-outlined mt-1 text-[1.75rem] leading-9 font-semibold tracking-[-0.02em]">
           Us
         </h1>
-        <p className="mt-1 text-sm text-text-secondary">Our life together.</p>
       </header>
       <CoupleProfile
         profile={couple.profile}
@@ -73,6 +79,7 @@ export function CouplePage() {
       <CoupleSettings
         onEdit={() => setEditProfile(true)}
         onConnection={() => setEditConnection(true)}
+        onBackground={() => setEditBackground(true)}
       />
       <InvitePartnerCard />
       <div>
@@ -130,6 +137,20 @@ export function CouplePage() {
           onSave={(profile) => {
             void couple.updateProfile(profile)
             setEditConnection(false)
+          }}
+        />
+      </MemoryDialog>
+      <MemoryDialog
+        open={editBackground}
+        title="Application background"
+        onClose={closeBackground}
+      >
+        <BackgroundSettings
+          value={couple.profile.background}
+          onCancel={closeBackground}
+          onSave={(preference) => {
+            void couple.updateBackground(preference)
+            setEditBackground(false)
           }}
         />
       </MemoryDialog>

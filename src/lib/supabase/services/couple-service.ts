@@ -1,4 +1,5 @@
 import type {
+  BackgroundPreference,
   CoupleProfile,
   Dream,
   DreamDraft,
@@ -129,6 +130,10 @@ export async function loadCoupleData(
       relationshipStartDate: coupleResult.data.relationship_start_date ?? '',
       description: coupleResult.data.description,
       nextTimeTogether: coupleResult.data.next_time_together ?? '',
+      background: {
+        preset: coupleResult.data.background_preset ?? 'default',
+        customColor: coupleResult.data.background_custom_color ?? undefined,
+      },
     },
     dreams: (dreamsResult.data ?? []).map(mapDream),
     importantDates: (datesResult.data ?? []).map(mapDate),
@@ -225,6 +230,25 @@ export async function updateCoupleProfile(input: {
   ])
   throwIfError(asServiceResult<null>(coupleValue).error)
   throwIfError(asServiceResult<null>(profileValue).error)
+}
+
+export async function updateCoupleBackground(
+  coupleId: string,
+  preference: BackgroundPreference,
+) {
+  const result = asServiceResult<null>(
+    await supabase
+      .from('couples')
+      .update({
+        background_preset: preference.preset,
+        background_custom_color:
+          preference.preset === 'custom'
+            ? preference.customColor?.toUpperCase()
+            : null,
+      })
+      .eq('id', coupleId),
+  )
+  throwIfError(result.error)
 }
 
 export async function createThinkingOfYou(coupleId: string, userId: string) {

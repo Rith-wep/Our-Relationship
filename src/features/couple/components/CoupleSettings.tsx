@@ -1,13 +1,22 @@
-import { CalendarDays, Info, LockKeyhole, MapPin, Pencil } from 'lucide-react'
+import {
+  CalendarDays,
+  Info,
+  LockKeyhole,
+  MapPin,
+  Palette,
+  Pencil,
+} from 'lucide-react'
 
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 
 export function CoupleSettings({
   onEdit,
   onConnection,
+  onBackground,
 }: {
   onEdit: () => void
   onConnection: () => void
+  onBackground: () => void
 }) {
   const items = [
     {
@@ -41,6 +50,18 @@ export function CoupleSettings({
       </h2>
       <div className="mt-3 overflow-hidden rounded-card border border-border bg-card shadow-soft">
         <ThemeToggle variant="setting" />
+        <button
+          type="button"
+          onClick={onBackground}
+          className="flex min-h-16 w-full items-center gap-3 border-b border-border px-4 text-left"
+        >
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-button">
+            <Palette aria-hidden="true" className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1 text-sm font-semibold">
+            Background
+          </span>
+        </button>
         {items.map(({ label, icon: Icon, action }) => {
           const content = (
             <>

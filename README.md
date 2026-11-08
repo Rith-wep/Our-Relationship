@@ -6,7 +6,7 @@
 
 **Frontend, Supabase Auth, secure couple onboarding, and database-backed relationship features are implemented.**
 
-The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, and private media. Profile-photo Storage is deployed. Realtime synchronization is implemented and locally verified; its publication migration awaits hosted approval. PWA behavior and deployment remain planned.
+The repository contains a working React, Vite, and TypeScript application with Tailwind CSS, a responsive mobile app shell, interactive Home, Timeline, Memories, Love Letters, and Our Space screens, reusable design-system components, strict static analysis, and formatting tools. Supabase provides authentication, hosted PostgreSQL persistence, invitation-based couple pairing, RLS authorization, private mailboxes, private media, and Realtime synchronization. PWA behavior and deployment remain planned.
 
 ### Implemented now
 
@@ -44,6 +44,7 @@ The repository contains a working React, Vite, and TypeScript application with T
 - Optional city, country, and timezone per partner without precise or live location collection
 - Optional shared next-meeting date with a compact Home countdown
 - One-tap, timestamped Thinking of You signals with couple-scoped RLS and Realtime updates
+- Shared light-mode application backgrounds with six presets, an optional custom color, automatic contrast handling, persistence, and Realtime synchronization
 
 ### Not implemented yet
 
@@ -559,6 +560,12 @@ Home displays only configured connection details: partner cities, their current 
 
 These settings live in Our Space under Distance & time. Migration `202611080007_connection_features.sql` extends the existing tables, adds the RLS-protected signal table, and publishes it to Realtime. It is deployed and verified.
 
+## Shared application background
+
+Our Space → Settings → Appearance → Background provides Default, Soft Pink, Cream, Lavender, Sky Blue, and Dark Romantic presets plus a custom six-digit color picker. Changes preview immediately across the application shell while cards remain primarily white. Dark custom backgrounds switch page-level text to a readable light palette; white card surfaces retain dark text. The existing dark mode is intentionally unchanged.
+
+The preference is stored on the existing `couples` row and uses the existing member-only update policy and couple-scoped Realtime subscription. Migration `202611080008_shared_background.sql` adds only `background_preset` and `background_custom_color`, with strict preset and hex-color constraints. It passed a clean local migration replay and the 77-test pgTAP suite, and is deployed to hosted Supabase.
+
 The client should:
 
 - Fetch canonical data first, then attach subscriptions.
@@ -592,9 +599,12 @@ Implemented browser client configuration:
 ```dotenv
 VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_APP_URL=
 ```
 
 `VITE_SUPABASE_ANON_KEY` remains supported as a legacy fallback. Vite exposes variables prefixed with `VITE_` to the browser, so they must never contain service-role keys, secret keys, database passwords, or CLI access tokens.
+
+`VITE_APP_URL` is optional locally and should contain the deployed HTTPS origin in production, such as `https://our-little-universe.vercel.app`. Partner invitation links use this value when present; otherwise they use the current browser origin. Links generated from `localhost` are only suitable for same-device development.
 
 Environment handling will follow these rules:
 
@@ -739,7 +749,7 @@ supabase db reset
 supabase test db
 ```
 
-`supabase db reset` rebuilds only the disposable local database and applies all checked-in migrations. `supabase test db` runs 49 core pgTAP assertions plus a four-assertion, two-session invitation concurrency suite. For an existing environment, review the generated diff and apply through the project's controlled migration workflow. Do not run these initial migrations directly against production without first validating them in disposable local and staging databases.
+`supabase db reset` rebuilds only the disposable local database and applies all checked-in migrations. `supabase test db` currently runs 80 core pgTAP assertions plus a four-assertion, two-session invitation concurrency suite. Migrations `202611080009_invitation_management.sql` and `202611080010_invitation_function_privileges.sql` are locally verified and deployed. For an existing environment, review the generated diff and apply through the project's controlled migration workflow.
 
 The detailed status and security review are in `supabase/SECURITY_VERIFICATION.md`. On 2026-11-07, a clean PostgreSQL 17 reset applied all four migrations and `supabase test db` passed 49 core assertions plus four independent-session concurrency assertions. The hosted database remains unchanged.
 

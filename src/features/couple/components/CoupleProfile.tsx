@@ -40,7 +40,7 @@ export function CoupleProfile({
             </div>
           ))}
         </div>
-        <h2 className="mt-4 text-xl font-semibold tracking-[-0.02em] text-text-primary">
+        <h2 className="couple-profile-title mt-4 text-xl font-semibold tracking-[-0.02em] text-text-primary">
           {profile.partners[0].name} &amp; {profile.partners[1].name}
         </h2>
         {duration.status === 'active' ? (
@@ -55,7 +55,12 @@ export function CoupleProfile({
         <p className="mt-4 max-w-xs text-sm leading-6 text-text-secondary">
           {profile.description}
         </p>
-        <Button variant="secondary" size="sm" onClick={onEdit} className="mt-5">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onEdit}
+          className="keep-white-surface mt-5 bg-white text-[#1f2937] hover:bg-gray-100"
+        >
           <Pencil aria-hidden="true" className="size-4" /> Edit Profile
         </Button>
       </div>

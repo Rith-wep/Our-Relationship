@@ -12,6 +12,7 @@ import {
 } from '@/app/providers/couple-context'
 import { useAuth } from '@/features/auth/useAuth'
 import type {
+  BackgroundPreference,
   CoupleProfile,
   Dream,
   DreamDraft,
@@ -30,6 +31,7 @@ import {
   removeProfilePhotoRecord,
   replaceProfilePhoto,
   updateCoupleProfile,
+  updateCoupleBackground,
   updateDateRecord,
   updateDreamRecord,
 } from '@/lib/supabase/services/couple-service'
@@ -43,6 +45,7 @@ const emptyProfile: CoupleProfile = {
   relationshipStartDate: '',
   description: '',
   nextTimeTogether: '',
+  background: { preset: 'default' },
 }
 
 export function CoupleProvider({ children }: { children: ReactNode }) {
@@ -151,6 +154,27 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
         await session.refresh()
       }),
     [auth.user, runMutation, session],
+  )
+
+  const updateBackground = useCallback(
+    async (background: BackgroundPreference) => {
+      if (!session.couple) return
+      const previous = profile.background
+      setProfile((current) => ({ ...current, background }))
+      setError(null)
+      try {
+        await updateCoupleBackground(session.couple.coupleId, background)
+        await retry(false)
+      } catch (caught) {
+        setProfile((current) => ({ ...current, background: previous }))
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : 'Background update failed.',
+        )
+      }
+    },
+    [profile.background, retry, session.couple],
   )
 
   const uploadProfilePhoto = useCallback(
@@ -273,6 +297,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
       realtimeState,
       retry,
       updateProfile,
+      updateBackground,
       uploadProfilePhoto,
       removeProfilePhoto,
       sendThinkingOfYou,
@@ -303,6 +328,7 @@ export function CoupleProvider({ children }: { children: ReactNode }) {
       toggleDream,
       updateDream,
       updateProfile,
+      updateBackground,
       uploadProfilePhoto,
       uploadingPhoto,
       updateSpecialDate,

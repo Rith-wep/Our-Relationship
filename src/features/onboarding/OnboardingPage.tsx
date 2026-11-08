@@ -1,19 +1,35 @@
-import { Check, Copy, Heart, Link2, Users } from 'lucide-react'
+import {
+  Check,
+  Copy,
+  Heart,
+  Link2,
+  Share2,
+  TriangleAlert,
+  Users,
+} from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import { Button } from '@/components/ui/Button'
 import { AuthField } from '@/features/auth/components/AuthField'
 import { AuthLayout } from '@/features/auth/components/AuthLayout'
 import { AuthMessage } from '@/features/auth/components/AuthMessage'
 import type { InvitationResult } from '@/features/onboarding/types'
+import {
+  copyInvitationUrl,
+  invitationUrlLabel,
+  isLocalInvitationUrl,
+  shareInvitationUrl,
+} from '@/features/onboarding/invitation-url'
 import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 
 export function OnboardingPage() {
   const session = useCoupleSession()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const invitationToken = searchParams.get('invite')?.trim() ?? ''
+  const { inviteToken = '' } = useParams<{ inviteToken: string }>()
+  const invitationToken =
+    inviteToken.trim() || searchParams.get('invite')?.trim() || ''
   const [displayName, setDisplayName] = useState(session.displayName ?? '')
   const [relationshipDate, setRelationshipDate] = useState('')
   const [description, setDescription] = useState('')
@@ -22,6 +38,7 @@ export function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false)
   const [invitation, setInvitation] = useState<InvitationResult | null>(null)
   const [copied, setCopied] = useState(false)
+  const [shareError, setShareError] = useState<string | null>(null)
 
   const expiresLabel = useMemo(() => {
     if (!invitation) return ''
@@ -65,6 +82,16 @@ export function OnboardingPage() {
         title="Bring your partner in"
         description="A single-use link for their email."
       >
+        {isLocalInvitationUrl(invitation.url) ? (
+          <div className="mb-4 flex gap-2 rounded-control bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+            <TriangleAlert
+              className="mt-0.5 size-4 shrink-0"
+              aria-hidden="true"
+            />
+            This local link only works on this device. Set VITE_APP_URL to your
+            deployed HTTPS address before sharing it.
+          </div>
+        ) : null}
         <div className="flex items-start gap-3 rounded-control bg-primary-soft p-3.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-white">
             <Link2 className="size-4" aria-hidden="true" />
@@ -73,23 +100,43 @@ export function OnboardingPage() {
             <p className="text-sm font-semibold text-text-primary">
               Expires {expiresLabel}
             </p>
-            <p className="mt-1 break-all text-xs leading-5 text-text-secondary">
-              {invitation.url}
+            <p className="mt-1 truncate text-xs leading-5 text-text-secondary">
+              {invitationUrlLabel(invitation.url)}
             </p>
           </div>
         </div>
+        {shareError ? <AuthMessage>{shareError}</AuthMessage> : null}
         <Button
           fullWidth
           className="mt-4"
           onClick={() => {
-            void navigator.clipboard.writeText(invitation.url).then(() => {
-              setCopied(true)
-            })
+            setShareError(null)
+            void copyInvitationUrl(invitation.url)
+              .then(() => setCopied(true))
+              .catch(() => {
+                setShareError('Could not copy the link. Try Share instead.')
+              })
           }}
         >
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           {copied ? 'Copied' : 'Copy invitation link'}
         </Button>
+        {'share' in navigator ? (
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-3"
+            onClick={() => {
+              setShareError(null)
+              void shareInvitationUrl(invitation.url).catch(() => {
+                setShareError('Could not open sharing. Copy the link instead.')
+              })
+            }}
+          >
+            <Share2 className="size-4" />
+            Share invitation
+          </Button>
+        ) : null}
         <Button
           variant="secondary"
           fullWidth

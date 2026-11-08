@@ -2,11 +2,11 @@
 
 ## Current verification status
 
-**Passed locally on PostgreSQL 17 — 69/69 assertions successful.**
+**Passed locally on PostgreSQL 17 — 84/84 assertions successful.**
 
-On 2026-11-08, a clean Docker-backed `supabase db reset` applied migrations `202611070001` through `202611080007` in order. `supabase test db` passed both test files: 65 core security assertions and four independent-session concurrency assertions.
+On 2026-11-08, a clean Docker-backed `supabase db reset` applied migrations `202611070001` through `202611080010` in order. `supabase test db` passed both test files: 80 core security assertions and four independent-session concurrency assertions. Migrations `009` and `010` are hosted. A post-deployment schema dump confirmed that couple and invitation workflow execution is granted to `authenticated` and `service_role`, not `anon`.
 
-Hosted project `jthkuepideccbiqjqeci` has migrations 001–007 applied. Read-only post-deployment inspection confirmed the expected schema, RLS, Storage policies, replica identity, and Realtime publication membership.
+Hosted project `jthkuepideccbiqjqeci` has migrations 001–008 applied. Read-only post-deployment inspection confirmed the expected schema, RLS, Storage policies, replica identity, Realtime publication membership, and shared-background constraints.
 
 ## Verified environment
 
@@ -38,7 +38,7 @@ Executed test result:
 ```text
 database_security.sql .............. ok
 database_security_concurrency.sql .. ok
-Files=2, Tests=69
+Files=2, Tests=84
 All tests successful.
 Result: PASS
 ```
@@ -49,7 +49,7 @@ The read-only local inventory confirmed:
 
 - all four migration versions recorded;
 - 10 application tables, all with RLS enabled;
-- 60 constraints;
+- 62 constraints;
 - 14 application triggers;
 - 14 public functions;
 - 27 public-table policies and four `storage.objects` policies;
@@ -57,13 +57,16 @@ The read-only local inventory confirmed:
 
 ## Automated test coverage
 
-The 65-test core suite verifies:
+The 80-test core suite verifies:
 
 - anonymous denial and authenticated couple isolation;
 - direct membership and invitation mutation denial;
 - one-couple-per-user and maximum-two-member constraints;
 - valid, expired, revoked, reused, user-bound, and email-bound invitations;
 - one-time raw invitation token handling;
+- automatic revocation of an older active invitation when it is replaced;
+- member-only invitation status listing without raw tokens or token hashes;
+- anonymous roles cannot execute couple or invitation workflow functions;
 - draft privacy, non-empty sending, sent-content immutability, and recipient-only read state;
 - independent mailbox deletion and restoration;
 - cross-couple foreign-key denial and memory soft-delete restoration;
@@ -71,6 +74,7 @@ The 65-test core suite verifies:
 - profile-object owner writes, partner reads, and unrelated-user denial;
 - Realtime publication membership, full replica identity, and anonymous helper denial;
 - optional location ownership, timezone validation, shared next-meeting updates, and Thinking of You isolation;
+- shared background member updates, partner visibility, unrelated-user isolation, and preset/custom-color constraints;
 - private bucket configuration, direct role privileges, `SECURITY DEFINER`, and empty `search_path` settings.
 
 The four-test concurrency suite opens two independent PostgreSQL sessions and confirms exactly one invitation can claim the final couple slot, the other receives the capacity error, only two members exist, and only the successful invitation is consumed.
@@ -98,7 +102,7 @@ No RLS policy, grant, trigger, migration, or security invariant was weakened.
 
 ## Remaining limitations
 
-- Hosted migrations 001–007 are applied and structurally verified.
+- Hosted migrations 001–008 are applied and structurally verified.
 - Supabase default grants expose broader table privileges on `thinking_of_you` than required; RLS still denies update/delete because no policies permit them. A future approved hardening migration should revoke those unused privileges explicitly.
 - Actual Storage HTTP upload/download behavior, signed URL expiry, and denial of public URLs still require integration tests.
 - Binary Storage cleanup after permanent memory deletion requires the planned trusted cleanup workflow.

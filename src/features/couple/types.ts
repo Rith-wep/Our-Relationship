@@ -9,11 +9,26 @@ export interface CouplePartner {
   timezone?: string
 }
 
+export type BackgroundPreset =
+  | 'default'
+  | 'soft_pink'
+  | 'cream'
+  | 'lavender'
+  | 'sky_blue'
+  | 'dark_romantic'
+  | 'custom'
+
+export interface BackgroundPreference {
+  preset: BackgroundPreset
+  customColor?: string
+}
+
 export interface CoupleProfile {
   partners: [CouplePartner, CouplePartner]
   relationshipStartDate: string
   description: string
   nextTimeTogether: string
+  background: BackgroundPreference
 }
 
 export interface ThinkingOfYou {

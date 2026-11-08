@@ -9,6 +9,7 @@ import { useLetters } from '@/app/providers/useLetters'
 import { useMemories } from '@/app/providers/useMemories'
 import { Button } from '@/components/ui/Button'
 import { PageSkeleton } from '@/components/ui/PageSkeleton'
+import { applyBackgroundPreference } from '@/features/couple/backgrounds'
 
 export function AppShell() {
   const location = useLocation()
@@ -33,6 +34,10 @@ export function AppShell() {
       import('@/features/couple/CouplePage'),
     ])
   }, [])
+
+  useEffect(() => {
+    applyBackgroundPreference(couple.profile.background)
+  }, [couple.profile.background])
 
   return (
     <div className="flex min-h-dvh justify-center bg-app-surround sm:p-4 lg:p-6">

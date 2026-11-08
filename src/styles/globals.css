@@ -34,6 +34,60 @@
 }
 
 @layer base {
+  :root[data-theme='light'][data-app-background='soft_pink'] {
+    --color-background: #fff0f7;
+    --color-app-surround: #fff0f7;
+  }
+
+  :root[data-theme='light'][data-app-background='cream'] {
+    --color-background: #fff8e7;
+    --color-app-surround: #fff8e7;
+  }
+
+  :root[data-theme='light'][data-app-background='lavender'] {
+    --color-background: #f3eeff;
+    --color-app-surround: #f3eeff;
+  }
+
+  :root[data-theme='light'][data-app-background='sky_blue'] {
+    --color-background: #eaf6ff;
+    --color-app-surround: #eaf6ff;
+  }
+
+  :root[data-theme='light'][data-app-background='dark_romantic'] {
+    --color-background: #251923;
+    --color-app-surround: #251923;
+  }
+
+  :root[data-theme='light'][data-app-background='custom'] {
+    --color-background: var(--custom-app-background, #ffffff);
+    --color-app-surround: var(--custom-app-background, #ffffff);
+  }
+
+  :root[data-theme='light'][data-app-background-dark='true'] {
+    --color-card: #95878f;
+    --color-surface: #877982;
+    --color-border: #cdbec7;
+    --color-border-strong: #e1d3db;
+    --color-primary-soft: #725665;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #eee7eb;
+    --color-text-muted: #d8ccd3;
+  }
+
+  :root[data-theme='light'][data-app-background-dark='true']
+    :is(.bg-card, .bg-white, .bg-surface, .bg-primary-soft) {
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #eee7eb;
+    --color-text-muted: #d8ccd3;
+    color: var(--color-text-primary);
+  }
+
+  :root[data-theme='light'][data-app-background-dark='true']
+    [class*='bg-primary-soft/'] {
+    background-color: #95878f;
+  }
+
   :root[data-theme='dark'] {
     --color-background: #111827;
     --color-card: #1f2937;
@@ -64,6 +118,9 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -webkit-text-size-adjust: 100%;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
   }
 
   body {
@@ -72,6 +129,7 @@
     margin: 0;
     background: var(--color-background);
     overflow-x: hidden;
+    transition: background-color 180ms ease;
   }
 
   button,
@@ -221,4 +279,19 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+:root[data-theme='light'][data-app-background-dark='true']
+  .couple-profile-title {
+  color: #ffffff;
+}
+
+:root[data-theme='light'][data-app-background-dark='true']
+  .bg-white:not(.keep-white-surface) {
+  background-color: #95878f;
+}
+
+:root[data-theme='light'][data-app-background-dark='true'] .keep-white-surface {
+  background-color: #ffffff;
+  color: #1f2937;
 }

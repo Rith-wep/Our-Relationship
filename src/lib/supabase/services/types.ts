@@ -29,6 +29,15 @@ export interface CoupleRow {
   relationship_start_date: string | null
   description: string
   next_time_together: string | null
+  background_preset:
+    | 'default'
+    | 'soft_pink'
+    | 'cream'
+    | 'lavender'
+    | 'sky_blue'
+    | 'dark_romantic'
+    | 'custom'
+  background_custom_color: string | null
   created_at: string
   updated_at: string
 }

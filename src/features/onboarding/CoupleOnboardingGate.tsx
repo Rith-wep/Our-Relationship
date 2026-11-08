@@ -6,6 +6,9 @@ import { useCoupleSession } from '@/features/onboarding/useCoupleSession'
 export function CoupleOnboardingGate() {
   const session = useCoupleSession()
   const location = useLocation()
+  const isOnboardingPath =
+    location.pathname === '/onboarding' ||
+    location.pathname.startsWith('/join/')
 
   if (session.loading) {
     return <PageSkeleton fullscreen />
@@ -38,7 +41,7 @@ export function CoupleOnboardingGate() {
 
   if (!session.couple) {
     const destination = `${location.pathname}${location.search}`
-    return location.pathname === '/onboarding' ? (
+    return isOnboardingPath ? (
       <Outlet />
     ) : (
       <Navigate
@@ -48,6 +51,6 @@ export function CoupleOnboardingGate() {
     )
   }
 
-  if (location.pathname === '/onboarding') return <Navigate to="/" replace />
+  if (isOnboardingPath) return <Navigate to="/" replace />
   return <Outlet />
 }

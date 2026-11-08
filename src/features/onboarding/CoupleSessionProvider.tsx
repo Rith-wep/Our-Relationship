@@ -17,7 +17,10 @@ import type {
   CoupleMemberIdentity,
   CoupleSession,
   InvitationResult,
+  InvitationStatus,
+  InvitationSummary,
 } from '@/features/onboarding/types'
+import { createInvitationUrl } from '@/features/onboarding/invitation-url'
 import { supabase } from '@/lib/supabase/client'
 
 interface MembershipRow {
@@ -38,6 +41,14 @@ interface InvitationRow {
   invitation_id: string
   raw_token: string
   expires_at: string
+}
+
+interface InvitationSummaryRow {
+  invitation_id: string
+  recipient_email: string | null
+  expires_at: string
+  created_at: string
+  status: InvitationStatus
 }
 
 interface RpcResult<T> {
@@ -217,14 +228,12 @@ export function CoupleSessionProvider({ children }: { children: ReactNode }) {
       }
 
       const invitation = data[0]
-      const url = new URL('/onboarding', window.location.origin)
-      url.searchParams.set('invite', invitation.raw_token)
       return {
         data: {
           invitationId: invitation.invitation_id,
           token: invitation.raw_token,
           expiresAt: invitation.expires_at,
-          url: url.toString(),
+          url: createInvitationUrl(invitation.raw_token),
         },
         error: null,
       }
@@ -252,14 +261,12 @@ export function CoupleSessionProvider({ children }: { children: ReactNode }) {
         }
       }
       const invitation = data[0]
-      const url = new URL('/onboarding', window.location.origin)
-      url.searchParams.set('invite', invitation.raw_token)
       return {
         data: {
           invitationId: invitation.invitation_id,
           token: invitation.raw_token,
           expiresAt: invitation.expires_at,
-          url: url.toString(),
+          url: createInvitationUrl(invitation.raw_token),
         },
         error: null,
       }
@@ -286,6 +293,44 @@ export function CoupleSessionProvider({ children }: { children: ReactNode }) {
     [refresh, upsertProfile],
   )
 
+  const listInvitations = useCallback(async (): Promise<
+    CoupleActionResult<InvitationSummary[]>
+  > => {
+    if (!couple) return { error: 'Your shared space is not available.' }
+    const { data, error: invitationError } = (await supabase.rpc(
+      'list_couple_invitations',
+      { target_couple: couple.coupleId },
+    )) as RpcResult<InvitationSummaryRow[] | null>
+    if (invitationError) {
+      return { error: getFriendlyOnboardingError(invitationError.message) }
+    }
+    return {
+      data: (data ?? []).map((invitation) => ({
+        invitationId: invitation.invitation_id,
+        recipientEmail: invitation.recipient_email,
+        expiresAt: invitation.expires_at,
+        createdAt: invitation.created_at,
+        status: invitation.status,
+      })),
+      error: null,
+    }
+  }, [couple])
+
+  const revokeInvitation = useCallback(
+    async (invitationId: string): Promise<CoupleActionResult> => {
+      const { error: invitationError } = (await supabase.rpc(
+        'revoke_couple_invitation',
+        { invitation: invitationId },
+      )) as RpcResult<null>
+      return {
+        error: invitationError
+          ? getFriendlyOnboardingError(invitationError.message)
+          : null,
+      }
+    },
+    [],
+  )
+
   const value = useMemo<CoupleSessionContextValue>(
     () => ({
       couple,
@@ -296,6 +341,8 @@ export function CoupleSessionProvider({ children }: { children: ReactNode }) {
       createSpace,
       acceptInvitation,
       createInvitation,
+      listInvitations,
+      revokeInvitation,
     }),
     [
       acceptInvitation,
@@ -305,7 +352,9 @@ export function CoupleSessionProvider({ children }: { children: ReactNode }) {
       displayName,
       error,
       loading,
+      listInvitations,
       refresh,
+      revokeInvitation,
     ],
   )
 

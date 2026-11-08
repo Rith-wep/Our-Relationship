@@ -1,5 +1,9 @@
 # Hosted Supabase database verification report
 
+> Update on 2026-11-08: migration `202611080008_shared_background.sql` was applied after explicit approval. It adds two non-destructive columns to `public.couples`, defaults existing rows to the current background, and adds two validation constraints. A clean local reset and all 77 pgTAP assertions passed. A post-deployment dry run reported no pending migrations, and a read-only hosted schema dump confirmed both columns, defaults, constraints, and comments.
+
+> Update on 2026-11-08: migrations `202611080009_invitation_management.sql` and `202611080010_invitation_function_privileges.sql` were applied after explicit approval. Replacement invitations now revoke older active links, member-only metadata exposes no token material, and anonymous execution has been removed from all couple and invitation workflow functions. Migrations `001–010` and all 84 security assertions pass locally. A post-deployment dry run reports no pending migrations, and a hosted schema dump confirms only `authenticated` and `service_role` retain workflow execution.
+
 ## Step 15 post-deployment update — 2026-11-08
 
 Migration `202611080005_profile_media_storage.sql` was applied to confirmed project `jthkuepideccbiqjqeci` after explicit approval. A subsequent dry run reported no pending migrations. A read-only hosted schema dump confirmed `avatar_mime_type`, `avatar_size_bytes`, the metadata consistency constraint, both profile path helpers, four profile-media Storage policies, and RLS on every application table.

@@ -36,11 +36,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthLayout
-      eyebrow="Our Little Universe"
-      title="Welcome back"
-      description="Return to your shared space."
-    >
+    <AuthLayout eyebrow="Our Little Universe" title="Welcome back">
       <form className="space-y-4" onSubmit={(event) => void submit(event)}>
         {error ? <AuthMessage>{error}</AuthMessage> : null}
         <AuthField

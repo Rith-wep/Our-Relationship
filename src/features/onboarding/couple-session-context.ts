@@ -4,6 +4,7 @@ import type {
   CoupleActionResult,
   CoupleSession,
   InvitationResult,
+  InvitationSummary,
 } from '@/features/onboarding/types'
 
 export interface CoupleSessionContextValue {
@@ -25,6 +26,8 @@ export interface CoupleSessionContextValue {
   createInvitation: (
     recipientEmail: string,
   ) => Promise<CoupleActionResult<InvitationResult>>
+  listInvitations: () => Promise<CoupleActionResult<InvitationSummary[]>>
+  revokeInvitation: (invitationId: string) => Promise<CoupleActionResult>
 }
 
 export const CoupleSessionContext =
