@@ -24,7 +24,7 @@ export function HomePage() {
   const [hour, setHour] = useState(() => new Date().getHours())
   const greeting = getGreeting(hour)
   const GreetingIcon = greeting.icon
-  const { activeMemories } = useMemories()
+  const memories = useMemories()
   const couple = useCouple()
   const { profile } = couple
   const auth = useAuth()
@@ -90,7 +90,12 @@ export function HomePage() {
       />
       <AnniversaryCard relationshipStartDate={profile.relationshipStartDate} />
       <DailyLoveNote />
-      <RecentMemories memories={activeMemories} />
+      <RecentMemories
+        memories={memories.activeMemories}
+        loading={memories.loading}
+        error={memories.error}
+        onRetry={memories.retry}
+      />
       <QuickActions />
     </div>
   )

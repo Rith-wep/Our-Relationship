@@ -30,7 +30,7 @@ export function AppShell() {
       ? [memories]
       : isCoupleRoute
         ? [couple]
-        : [couple, memories]
+        : [couple]
   const loading = routeProviders.some((provider) => provider.loading)
   const error = routeProviders.find((provider) => provider.error)?.error ?? null
   const reconnecting = [
@@ -38,16 +38,6 @@ export function AppShell() {
     memories.realtimeState,
     letters.realtimeState,
   ].includes('reconnecting')
-
-  useEffect(() => {
-    void Promise.all([
-      import('@/features/home/HomePage'),
-      import('@/features/timeline/TimelinePage'),
-      import('@/features/memories/MemoriesPage'),
-      import('@/features/letters/LettersPage'),
-      import('@/features/couple/CouplePage'),
-    ])
-  }, [])
 
   useEffect(() => {
     applyBackgroundPreference(couple.profile.background)

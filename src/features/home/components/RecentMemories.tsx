@@ -1,10 +1,15 @@
 import { ArrowRight, CalendarDays } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/PageSkeleton'
 import type { TimelineMemory } from '@/features/timeline/types'
 
 interface RecentMemoriesProps {
   memories: TimelineMemory[]
+  loading: boolean
+  error: string | null
+  onRetry: () => Promise<void>
 }
 
 const shortDateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -14,7 +19,12 @@ const shortDateFormatter = new Intl.DateTimeFormat(undefined, {
   timeZone: 'UTC',
 })
 
-export function RecentMemories({ memories }: RecentMemoriesProps) {
+export function RecentMemories({
+  memories,
+  loading,
+  error,
+  onRetry,
+}: RecentMemoriesProps) {
   const recentMemories = [...memories]
     .sort((first, second) => second.date.localeCompare(first.date))
     .slice(0, 3)
@@ -38,48 +48,69 @@ export function RecentMemories({ memories }: RecentMemoriesProps) {
       </div>
 
       <div className="mt-3 space-y-3">
-        {recentMemories.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3" aria-label="Loading recent memories">
+            <Skeleton className="h-24 w-full rounded-card" />
+            <Skeleton className="h-24 w-full rounded-card" />
+          </div>
+        ) : error ? (
+          <div className="rounded-card border border-border bg-surface px-4 py-5 text-center">
+            <p className="text-sm text-text-secondary">
+              Recent memories are unavailable.
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="mt-3"
+              onClick={() => void onRetry()}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : recentMemories.length === 0 ? (
           <p className="rounded-card border border-border bg-surface px-4 py-6 text-center text-sm text-text-secondary">
             Add your first memory.
           </p>
         ) : null}
-        {recentMemories.map((memory) => (
-          <Link
-            key={memory.id}
-            to="/timeline"
-            aria-label={`View ${memory.title} in Timeline`}
-            className="flex min-h-24 overflow-hidden rounded-card border border-border bg-card shadow-soft transition-colors hover:border-border-strong motion-reduce:transition-none"
-          >
-            {memory.photo ? (
-              <img
-                src={memory.photo.src}
-                alt=""
-                className="aspect-square w-24 shrink-0 object-cover"
-              />
-            ) : (
-              <div className="flex w-24 shrink-0 items-center justify-center bg-primary-soft text-primary">
-                <CalendarDays aria-hidden="true" className="size-5" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1 self-center p-3.5">
-              <p className="truncate text-sm font-semibold text-text-primary">
-                {memory.title}
-              </p>
-              <time
-                dateTime={memory.date}
-                className="mt-1 block text-xs text-text-secondary"
+        {!loading && !error
+          ? recentMemories.map((memory) => (
+              <Link
+                key={memory.id}
+                to="/timeline"
+                aria-label={`View ${memory.title} in Timeline`}
+                className="flex min-h-24 overflow-hidden rounded-card border border-border bg-card shadow-soft transition-colors hover:border-border-strong motion-reduce:transition-none"
               >
-                {shortDateFormatter.format(
-                  new Date(`${memory.date}T00:00:00.000Z`),
+                {memory.photo ? (
+                  <img
+                    src={memory.photo.src}
+                    alt=""
+                    className="aspect-square w-24 shrink-0 object-cover"
+                  />
+                ) : (
+                  <div className="flex w-24 shrink-0 items-center justify-center bg-primary-soft text-primary">
+                    <CalendarDays aria-hidden="true" className="size-5" />
+                  </div>
                 )}
-              </time>
-            </div>
-            <ArrowRight
-              aria-hidden="true"
-              className="mr-3 size-4 shrink-0 self-center text-text-muted"
-            />
-          </Link>
-        ))}
+                <div className="min-w-0 flex-1 self-center p-3.5">
+                  <p className="truncate text-sm font-semibold text-text-primary">
+                    {memory.title}
+                  </p>
+                  <time
+                    dateTime={memory.date}
+                    className="mt-1 block text-xs text-text-secondary"
+                  >
+                    {shortDateFormatter.format(
+                      new Date(`${memory.date}T00:00:00.000Z`),
+                    )}
+                  </time>
+                </div>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="mr-3 size-4 shrink-0 self-center text-text-muted"
+                />
+              </Link>
+            ))
+          : null}
       </div>
     </section>
   )
